@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gunslinger — Terminal para .NET e Node.js</title>
+  <meta name="description" content="Gunslinger: terminal para Windows com abas, comandos salvos, EF Core, scripts do npm, testes, Docker e portas. Download gratuito." />
+  <meta property="og:title" content="Gunslinger — Terminal para .NET e Node.js" />
+  <meta property="og:description" content="O terminal do Windows para quem vive de .NET e Node.js. Download gratuito." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://gunslinger.vercel.app/og-image.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="theme-color" content="#0b0f16" />
+  <link rel="icon" type="image/svg+xml" href="logo.svg" />
+  <link rel="icon" type="image/png" sizes="32x32" href="logo-32.png" />
+  <link rel="apple-touch-icon" href="logo-180.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <nav>
+    <div class="wrap">
+      <a class="brand" href="#"><img src="logo-64.png" alt="" />Gunslinger</a>
+      <div class="nav-links">
+        <a href="#interface">Interface</a>
+        <a href="#recursos">Recursos</a>
+        <a href="#como-funciona">Como funciona</a>
+        <a href="#faq">FAQ</a>
+        <a href="manual">Manual</a>
+        <a class="btn btn-primary btn-sm" href="#download">Baixar grátis</a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="wrap">
+    <div class="hero">
+      <div>
+        <span class="pill"><i></i>Versão <span data-version>0.1.0</span> para Windows 10 e 11</span>
+        <h1>O terminal do Windows que fala <span>.NET e Node.js.</span></h1>
+        <p class="lead">Abas com PowerShell, CMD, Git Bash e WSL, comandos de EF Core e scripts do <code>package.json</code> a um clique, testes, Docker e portas no mesmo lugar, e uma barra de status com branch, Node e .NET da pasta em que você está.</p>
+        <div class="cta">
+          <a class="btn btn-primary" data-download href="#download">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 21h16"/></svg>
+            Baixar para Windows
+          </a>
+          <a class="btn btn-ghost" href="#recursos">Ver recursos</a>
+        </div>
+        <div class="meta"><span>Gratuito</span><span>Sem cadastro</span><span>Seus dados ficam no seu PC</span><span>Windows 10 e 11</span></div>
+      </div>
+      <div class="hero-logo"><img src="logo-512.png" alt="Logo do Gunslinger: um tambor de revólver com um prompt de terminal no centro" width="256" height="256" /></div>
+    </div>
+    <figure class="shot hero-shot reveal">
+      <img src="img/principal.webp" width="1440" height="900" alt="Gunslinger com um projeto aberto: comandos de EF Core e perfis de execução no painel, log de uma API com aviso e erro destacados, e o Git num painel ao lado" />
+      <figcaption>Projeto .NET + Node aberto: EF Core, perfis do launchSettings.json e scripts no painel, log com destaque e Git na divisão da direita.</figcaption>
+    </figure>
+  </header>
+
+  <section id="interface">
+    <div class="wrap">
+      <div class="eyebrow">Interface</div>
+      <h2>Veja o Gunslinger em ação</h2>
+      <p class="sub">Prints reais do app, com um projeto de demonstração.</p>
+      <div data-gallery>
+        <div class="gallery-tabs" role="tablist" aria-label="Telas do Gunslinger">
+          <button role="tab" aria-selected="true" data-src="img/paleta.webp" data-alt="Paleta de comandos buscando migrations do EF Core" data-caption="Ctrl+P: comandos salvos, EF Core, scripts, workspaces e ações do app numa busca só, sem acentos e sem ordem exata.">Paleta</button>
+          <button role="tab" aria-selected="false" tabindex="-1" data-src="img/testes.webp" data-alt="Executor de testes com dois testes aprovados e um com falha e o link para a linha" data-caption="Executor de testes: Vitest, Jest e dotnet test com resultado por teste, mensagem, link para a linha e “rodar só as falhas”.">Testes</button>
+          <button role="tab" aria-selected="false" tabindex="-1" data-src="img/docker-portas.webp" data-alt="Painel Docker e portas mostrando a porta 5270 aberta por um node.exe da aba 3" data-caption="Docker e portas: quem está escutando em cada porta, de qual aba veio, e os containers com iniciar, parar, logs e shell.">Docker e portas</button>
+          <button role="tab" aria-selected="false" tabindex="-1" data-src="img/cores.webp" data-alt="Configurações de aparência com o seletor de cor aberto, mostrando hexadecimal, controles RGB e paleta" data-caption="Cores da interface e do terminal com hexadecimal, RGB e uma paleta sua.">Cores</button>
+        </div>
+        <figure class="shot reveal">
+          <img src="img/paleta.webp" width="1440" height="900" loading="lazy" alt="Paleta de comandos buscando migrations do EF Core" />
+          <figcaption>Ctrl+P: comandos salvos, EF Core, scripts, workspaces e ações do app numa busca só, sem acentos e sem ordem exata.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section id="recursos">
+    <div class="wrap">
+      <div class="eyebrow">Recursos</div>
+      <h2>Tudo o que você digita todo dia, a um atalho</h2>
+      <p class="sub">Feito para quem alterna entre API .NET, front em Node, banco no Docker e terminal de Git o dia inteiro.</p>
+      <div class="grid">
+        <div class="card reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m7 9 3 3-3 3M13 15h4"/></svg></div><h3>Abas, perfis e administrador</h3><p>PowerShell, CMD, Git Bash e WSL detectados sozinhos, perfis customizados e abas elevadas com o sudo do Windows ou gsudo.</p></div>
+        <div class="card reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></div><h3>Paleta Ctrl+P</h3><p>Comandos, scripts, projetos, workspaces e ações do app numa busca aproximada, sem acentos. Nada roda sem você confirmar.</p></div>
+        <div class="card reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 4h14v4H5zM5 10h14v4H5zM5 16h14v4H5z"/></svg></div><h3>Comandos salvos com variáveis</h3><p>Guarde <code>git checkout {branch}</code> e preencha na hora, com lista de opções e padrão. Organize por categoria.</p></div>
+        <div class="card reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v12c0 1.7 3.1 3 7 3s7-1.3 7-3V6M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3"/></svg></div><h3>EF Core pronto</h3><p>Nova migration, atualizar banco, remover, listar e gerar script com o projeto e o startup certos, e o aviso se faltar o dotnet-ef.</p></div>
+        <div class="card reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2 3 7v10l9 5 9-5V7z"/><path d="M12 22V12M3 7l9 5 9-5"/></svg></div><h3>npm, pnpm e yarn</h3><p>Os scripts de cada <code>package.json</code> (monorepos inclusos) com o gerenciador detectado pelo lockfile.</p></div>
+        <div class="card reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m5 3 14 9-14 9z"/></svg></div><h3>launchSettings.json</h3><p>Cada perfil de execução do ASP.NET vira <code>dotnet run</code> e <code>dotnet watch</code> com as URLs na descrição.</p></div>
+        <div class="card reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16M3 12h9"/></svg></div><h3>Divisão de tela e workspaces</h3><p>Painéis lado a lado e conjuntos de abas (API + front + shell livre) que abrem de uma vez, com comandos iniciais confirmados.</p></div>
+        <div class="card reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg></div><h3>Executor de testes</h3><p><code>dotnet test</code>, Vitest e Jest com resultado por teste, stack clicável, “rodar só este” e “rodar só as falhas”.</p></div>
+        <div class="card reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="10" width="20" height="10" rx="2"/><path d="M6 10V6h4v4M10 10V6h4v4M14 10V6h4v4"/></svg></div><h3>Docker e portas</h3><p>Quem está ouvindo em cada porta e de qual aba veio, encerrar com confirmação, e containers com logs e shell em abas novas.</p></div>
+        <div class="card reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h10M4 18h7"/><circle cx="18" cy="16" r="3"/></svg></div><h3>Perfis de ambiente</h3><p>Dev, Homologação e Produção com suas variáveis, cor na aba e confirmação obrigatória nos ambientes sensíveis.</p></div>
+        <div class="card reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></div><h3>Barra de status e logs</h3><p>Branch e alterações do Git, Node e .NET da pasta atual, erros e avisos destacados, e <code>Program.cs(42,13)</code> clicável no editor.</p></div>
+        <div class="card reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18c1.7 0 2-1.3 2-2.2 0-1.6 1.3-2.3 2.8-2.3H19a2 2 0 0 0 2-2"/><circle cx="7.5" cy="10.5" r="1"/><circle cx="12" cy="7.5" r="1"/><circle cx="16.5" cy="10.5" r="1"/></svg></div><h3>Cores, plugins e histórico</h3><p>Interface e terminal com as suas cores, plugins só de dados (sem código) e um histórico local para desfazer qualquer mudança.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="como-funciona">
+    <div class="wrap">
+      <div class="eyebrow">Como funciona</div>
+      <h2>Do download ao primeiro <code>dotnet ef</code> em 1 minuto</h2>
+      <p class="sub">Sem cadastro e sem servidor: comandos, projetos e configurações ficam em arquivos JSON na sua máquina.</p>
+      <div class="steps">
+        <div class="step reveal"><h3>Instale</h3><p>Baixe o <code>Gunslinger-Setup.exe</code>. A instalação é por usuário, sem pedir administrador.</p></div>
+        <div class="step reveal"><h3>Adicione um projeto</h3><p>Aponte para a pasta do repositório: o app encontra .csproj, soluções, <code>package.json</code> e o gerenciador de pacotes.</p></div>
+        <div class="step reveal"><h3>Rode com um atalho</h3><p>Ctrl+P, digite “migra” ou “dev” e Enter. O comando vai para o terminal certo, na pasta certa.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="download">
+    <div class="wrap">
+      <div class="dl reveal">
+        <div>
+          <div class="eyebrow">Download gratuito</div>
+          <h2>Baixe o Gunslinger</h2>
+          <p class="sub">Versão <span data-version>0.1.0</span> para Windows 10 e 11 (64 bits) · instalador <span data-size>~110 MB</span></p>
+          <div class="cta">
+            <a class="btn btn-primary" data-download href="#">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 21h16"/></svg>
+              Baixar instalador
+            </a>
+            <a class="btn btn-ghost" data-releases href="#">Todas as versões</a>
+          </div>
+          <p class="req">Requisitos: Windows 10 (1809 ou mais novo) ou Windows 11, 64 bits. Para os recursos de .NET, o SDK do .NET; para os de Node, o Node.js. Se o SmartScreen exibir um aviso, clique em “Mais informações” → “Executar assim mesmo”: o instalador ainda não tem assinatura digital.</p>
+        </div>
+        <img src="logo-256.png" alt="" />
+      </div>
+    </div>
+  </section>
+
+  <section id="faq">
+    <div class="wrap faq">
+      <div class="eyebrow">FAQ</div>
+      <h2>Perguntas frequentes</h2>
+      <details><summary>O Gunslinger é gratuito?</summary><p>Sim. Baixe e use sem custo e sem cadastro.</p></details>
+      <details><summary>Meus comandos e projetos vão para a internet?</summary><p>Não. Tudo fica em arquivos JSON em <code>%APPDATA%\Gunslinger</code>. O app não envia seus dados para servidor nenhum; o histórico de versões também é local.</p></details>
+      <details><summary>O app executa comandos sozinho?</summary><p>Não. Nenhum comando salvo, script ou comando inicial de workspace é enviado ao terminal sem uma ação sua (clique, Enter ou confirmação).</p></details>
+      <details><summary>Funciona com meu prompt do oh-my-posh ou starship?</summary><p>Sim. A integração com o shell envolve o seu prompt sem alterar o <code>$PROFILE</code>, o <code>.bashrc</code> nem nenhum outro arquivo seu.</p></details>
+      <details><summary>Ctrl+W e Ctrl+T conflitam com o Bash?</summary><p>Por padrão eles são atalhos do app (fechar e abrir aba). Em Configurações → Atalhos você troca qualquer combinação, e a tela avisa quando uma delas conflita com o readline.</p></details>
+      <details><summary>Como abro um terminal como administrador?</summary><p>No menu ▾ de nova aba, use 🛡 Admin. Com o sudo do Windows (modo inline) ou o gsudo, a aba elevada fica dentro do app; sem eles, abre numa janela separada. A confirmação é sempre o UAC do Windows.</p></details>
+      <details><summary>Tem versão para macOS ou Linux?</summary><p>Ainda não. O Gunslinger é feito para o Windows (ConPTY, Registro, sudo do Windows). O WSL roda normalmente dentro dele.</p></details>
+      <details><summary>Por que o Windows mostra um aviso ao instalar?</summary><p>O instalador ainda não tem assinatura digital, então o SmartScreen alerta na primeira execução. Clique em “Mais informações” e depois em “Executar assim mesmo”.</p></details>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <a class="brand" href="#"><img src="logo-64.png" alt="" />Gunslinger</a>
+      <span><a href="manual">Manual do usuário</a> · © <span id="year">2026</span> Felipe Santana</span>
+    </div>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="site.js"></script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+schema: spec-driven
+
+context: |
+  Projeto: Gunslinger, terminal desktop para Windows 10/11 (Linux/macOS no futuro).
+  Stack: Electron 33 + TypeScript estrito, electron-vite, React 18 + zustand, xterm.js 5, node-pty 1.1 (ConPTY), zod, jsonc-parser.
+  Arquitetura: main (PTY, FS, ambiente, config) / preload (contextBridge, sandbox) / renderer (UI), IPC tipado em src/shared/ipc-contract.ts.
+  Testes: Vitest (unitários em src/**/*.test.ts) e Playwright _electron (tests/e2e).
+  Idioma: artefatos e UI em português; código em inglês. Requisitos com SHALL/MUST e cenários GIVEN/WHEN/THEN.
+  Convenções completas em CLAUDE.md.
+
+# Project context (optional)
+# This is shown to AI when creating artifacts.
+# Add your tech stack, conventions, style guides, domain knowledge, etc.
+# Example:
+#   context: |
+#     Tech stack: TypeScript, React, Node.js
+#     We use conventional commits
+#     Domain: e-commerce platform
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always include a "Non-goals" section
+#     tasks:
+#       - Break tasks into chunks of max 2 hours
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+# Example:
+#   operations:
+#     apply:
+#       guidance:
+#         - Keep test summaries concise
+#     archive:
+#       guidance:
+#         - Summarize the archive outcome before finishing

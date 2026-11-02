@@ -1,0 +1,6 @@
+{
+  "name": "vitest-sample",
+  "private": true,
+  "scripts": { "test": "vitest" },
+  "devDependencies": { "vitest": "*" }
+}

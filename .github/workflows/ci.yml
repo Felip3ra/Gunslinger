@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      # O postinstall recompila @vscode/windows-process-tree para a ABI do Electron.
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      # Smoke e2e: abre a janela e um PTY real (valida node-pty/ConPTY no runtime do Electron).
+      - run: npx playwright test
+      - run: npx electron-builder --win --dir

@@ -1,0 +1,36 @@
+appId: com.gunslinger.app
+productName: Gunslinger
+directories:
+  output: dist
+  buildResources: build
+files:
+  - out/**
+  - package.json
+extraResources:
+  - from: resources/shell-integration
+    to: shell-integration
+# node-pty usa binários N-API pré-compilados; recompilar do zero falha (winpty).
+# windows-process-tree já é recompilado no postinstall.
+npmRebuild: false
+asarUnpack:
+  # Executáveis e DLLs precisam existir no disco (OpenConsole.exe, conpty.dll, *.node).
+  - node_modules/node-pty/**
+  - node_modules/@vscode/windows-process-tree/**
+win:
+  # Sem certificado de assinatura no MVP. Esta etapa também baixa o winCodeSign, cuja extração
+  # exige privilégio de symlink (Modo de Desenvolvedor do Windows).
+  signAndEditExecutable: false
+  target:
+    - target: nsis
+      arch: [x64]
+nsis:
+  # Nome fixo: o site aponta para releases/latest/download/Gunslinger-Setup.exe.
+  artifactName: Gunslinger-Setup.${ext}
+  oneClick: true
+  perMachine: false
+  allowElevation: false
+  # O atalho no Menu Iniciar com o AppUserModelID é necessário para as notificações do Windows.
+  createStartMenuShortcut: true
+  createDesktopShortcut: false
+  shortcutName: Gunslinger
+  deleteAppDataOnUninstall: false

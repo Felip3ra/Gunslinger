@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Manual do Gunslinger</title>
+  <meta name="description" content="Manual do Gunslinger: abas, atalhos, comandos salvos, projetos .NET e Node, testes, Docker, ambientes, workspaces, cores, plugins e configuração." />
+  <meta property="og:title" content="Manual do Gunslinger" />
+  <meta property="og:image" content="https://gunslinger.vercel.app/og-image.png" />
+  <meta name="theme-color" content="#0b0f16" />
+  <link rel="icon" type="image/svg+xml" href="logo.svg" />
+  <link rel="icon" type="image/png" sizes="32x32" href="logo-32.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <nav>
+    <div class="wrap">
+      <a class="brand" href="/"><img src="logo-64.png" alt="" />Gunslinger</a>
+      <div class="nav-links">
+        <a href="/#recursos">Recursos</a>
+        <a href="/#faq">FAQ</a>
+        <a class="btn btn-primary btn-sm" data-download href="/#download">Baixar grátis</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="wrap manual">
+    <aside class="toc" aria-label="Sumário">
+      <strong>Manual</strong>
+      <a href="#instalacao">Instalação</a>
+      <a href="#atalhos">Atalhos</a>
+      <a href="#abas">Abas e painéis</a>
+      <a href="#comandos">Comandos salvos</a>
+      <a href="#paleta">Paleta</a>
+      <a href="#projetos">Projetos .NET e Node</a>
+      <a href="#testes">Executor de testes</a>
+      <a href="#docker">Docker e portas</a>
+      <a href="#ambientes">Perfis de ambiente</a>
+      <a href="#workspaces">Workspaces</a>
+      <a href="#admin">Administrador</a>
+      <a href="#status">Barra de status</a>
+      <a href="#logs">Destaque e links</a>
+      <a href="#cores">Cores</a>
+      <a href="#plugins">Plugins</a>
+      <a href="#historico">Histórico de dados</a>
+      <a href="#configuracao">Configuração</a>
+      <a href="#limitacoes">Limitações</a>
+    </aside>
+
+    <article class="doc">
+      <h1>Manual do Gunslinger</h1>
+      <p>O Gunslinger é um terminal para Windows 10 e 11 pensado para quem trabalha com .NET e Node.js. Este manual cobre a versão <span data-version>0.1.0</span>.</p>
+      <figure class="shot">
+        <img src="img/principal.webp" width="1440" height="900" loading="lazy" alt="Tela principal com projeto aberto, log destacado e Git no painel da direita" />
+        <figcaption>Tela principal: painel lateral com o projeto, terminal dividido e barra de status.</figcaption>
+      </figure>
+
+      <h2 id="instalacao">Instalação</h2>
+      <p>Baixe o <a href="/#download" data-download><code>Gunslinger-Setup.exe</code></a> e execute. A instalação é por usuário (não pede administrador), cria o atalho no Menu Iniciar e mantém suas configurações ao desinstalar.</p>
+      <div class="note"><p>Se o Windows SmartScreen avisar na primeira execução, clique em <strong>Mais informações</strong> → <strong>Executar assim mesmo</strong>. O instalador ainda não tem assinatura digital.</p></div>
+
+      <h2 id="atalhos">Atalhos</h2>
+      <table>
+        <thead><tr><th>Ação</th><th>Atalho padrão</th></tr></thead>
+        <tbody>
+          <tr><td>Nova aba (perfil padrão)</td><td><kbd>Ctrl</kbd>+<kbd>T</kbd></td></tr>
+          <tr><td>Fechar painel ou aba</td><td><kbd>Ctrl</kbd>+<kbd>W</kbd></td></tr>
+          <tr><td>Próxima / anterior aba</td><td><kbd>Ctrl</kbd>+<kbd>Tab</kbd> / <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Tab</kbd></td></tr>
+          <tr><td>Paleta de comandos</td><td><kbd>Ctrl</kbd>+<kbd>P</kbd></td></tr>
+          <tr><td>Buscar na saída</td><td><kbd>Ctrl</kbd>+<kbd>F</kbd></td></tr>
+          <tr><td>Painel lateral</td><td><kbd>Ctrl</kbd>+<kbd>B</kbd></td></tr>
+          <tr><td>Copiar / colar</td><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd> / <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd> (Ctrl+C com seleção também copia)</td></tr>
+          <tr><td>Configurações</td><td><kbd>Ctrl</kbd>+<kbd>,</kbd></td></tr>
+          <tr><td>Dividir à direita / abaixo</td><td><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>=</kbd> / <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>-</kbd></td></tr>
+          <tr><td>Próximo / anterior painel</td><td><kbd>Alt</kbd>+<kbd>→</kbd> / <kbd>Alt</kbd>+<kbd>←</kbd></td></tr>
+        </tbody>
+      </table>
+      <p>Todos podem ser trocados em <strong>Configurações → Atalhos</strong>.</p>
+      <div class="note"><p><strong>Bash e WSL:</strong> Ctrl+W, Ctrl+T, Ctrl+P, Ctrl+F e Ctrl+B também são atalhos do readline. Para devolvê-los ao shell, troque-os nas configurações (por exemplo, Ctrl+Shift+W). A tela avisa quando uma combinação conflita.</p></div>
+
+      <h2 id="abas">Abas e painéis</h2>
+      <ul>
+        <li>O <strong>+</strong> abre uma aba com o perfil padrão; o menu <strong>▾</strong> ao lado abre qualquer perfil detectado (PowerShell, PowerShell 7, CMD, Git Bash, distribuições do WSL) ou customizado.</li>
+        <li>Divida a aba em painéis com os atalhos acima; arraste as divisórias para redimensionar. Ctrl+W fecha o painel ativo, e a aba fecha junto com o último.</li>
+        <li>Perfis customizados, cores e ícones ficam em <strong>Configurações → Perfis de shell</strong>.</li>
+        <li>Ao fechar o app com comandos rodando, ele pergunta antes e encerra a árvore de processos de cada aba (nada fica órfão).</li>
+      </ul>
+
+      <h2 id="comandos">Comandos salvos</h2>
+      <p>No painel lateral (<kbd>Ctrl</kbd>+<kbd>B</kbd>), o <strong>+</strong> cria um comando com nome, categoria, descrição, shell de destino e pasta. Use variáveis entre chaves:</p>
+      <pre><code>git checkout {branch}
+dotnet ef database update {migration} --connection "{conexao}"</code></pre>
+      <p>Ao executar, o app pede os valores (com lista de opções e valor padrão, se definidos). <strong>▶</strong> executa, <strong>⤓</strong> só insere no terminal sem Enter. Categorias podem ser renomeadas pelo ✎.</p>
+
+      <h2 id="paleta">Paleta de comandos</h2>
+      <p><kbd>Ctrl</kbd>+<kbd>P</kbd> busca em comandos salvos, comandos de projeto, scripts, workspaces, perfis de ambiente e ações do app. A busca ignora acentos e aceita letras fora de ordem (“migra” encontra “Nova migration”). <kbd>Enter</kbd> executa; <kbd>Shift</kbd>+<kbd>Enter</kbd> insere sem executar.</p>
+      <figure class="shot">
+        <img src="img/paleta.webp" width="1440" height="900" loading="lazy" alt="Paleta de comandos com a busca migra" />
+        <figcaption>Busca “migra”: comandos do EF Core do projeto ativo.</figcaption>
+      </figure>
+
+      <h2 id="projetos">Projetos .NET e Node</h2>
+      <p>Em <strong>Projetos</strong> (◆ no painel lateral), adicione a pasta do repositório. O app analisa:</p>
+      <ul>
+        <li><strong>.NET:</strong> soluções e <code>.csproj</code>, sugerindo o projeto das migrations e o de startup. O grupo <strong>EF Core</strong> traz nova migration, atualizar banco, remover a última, listar e gerar script, com aviso se o <code>dotnet-ef</code> não estiver instalado.</li>
+        <li><strong>launchSettings.json:</strong> cada perfil do tipo Project vira <code>dotnet run</code> e <code>dotnet watch run</code> com <code>--launch-profile</code>; perfis de IIS Express aparecem desativados com o motivo.</li>
+        <li><strong>Node:</strong> cada <code>package.json</code> (inclusive em subpastas de monorepos) com seus scripts e o gerenciador detectado pelo lockfile (npm, pnpm ou yarn), além de instalar dependências, adicionar pacote e npx.</li>
+      </ul>
+      <p>Abrir um projeto abre uma aba na raiz dele, com o perfil padrão do projeto. Os comandos rodam sempre na pasta certa.</p>
+
+      <h2 id="testes">Executor de testes</h2>
+      <p>Com um projeto aberto, <strong>Executor de testes</strong> (paleta) lista os projetos de teste .NET (xUnit, NUnit, MSTest) e os pacotes Node com Vitest ou Jest. Os testes rodam fora do terminal e o painel mostra aprovados, falhas e ignorados, com mensagem e stack trace clicável, <strong>Rodar só este</strong>, <strong>Rodar só as falhas</strong>, cancelamento e a saída bruta.</p>
+      <figure class="shot">
+        <img src="img/testes.webp" width="1440" height="900" loading="lazy" alt="Executor de testes com uma falha e o link para a linha" />
+        <figcaption>Vitest: dois aprovados e uma falha com o link para <code>pedidos.test.ts:13</code>.</figcaption>
+      </figure>
+
+      <h2 id="docker">Docker e portas</h2>
+      <p><strong>Docker e portas</strong> (paleta) lista as portas TCP em escuta com o processo dono e, quando o processo nasceu de uma aba do Gunslinger, a aba (clique para ir até ela). <strong>Encerrar processo</strong> pede confirmação.</p>
+      <p>Os containers vêm do CLI do Docker: iniciar, parar, reiniciar e remover; <strong>Logs</strong> e <strong>Shell</strong> abrem uma aba nova com <code>docker logs -f</code> ou <code>docker exec -it … sh</code>. Sem Docker ou com o daemon parado, o painel mostra o motivo. A lista se atualiza a cada 5 segundos.</p>
+      <figure class="shot">
+        <img src="img/docker-portas.webp" width="1440" height="900" loading="lazy" alt="Painel Docker e portas" />
+        <figcaption>A porta 5270 aberta por um <code>node.exe</code> da aba 3.</figcaption>
+      </figure>
+
+      <h2 id="ambientes">Perfis de ambiente</h2>
+      <p>Em <strong>Configurações → Ambientes</strong>, crie conjuntos de variáveis (Dev, Homologação, Produção, com <code>ASPNETCORE_ENVIRONMENT</code> e connection strings). Na paleta:</p>
+      <ul>
+        <li><strong>Nova aba com ambiente</strong>: as variáveis entram no processo do shell e não aparecem no histórico.</li>
+        <li><strong>Aplicar ambiente</strong>: digita <code>set</code>, <code>$env:</code> ou <code>export</code> na aba ativa, com pré-visualização. Ambientes sensíveis pedem confirmação explícita.</li>
+      </ul>
+      <p>A aba mostra o ambiente com a cor dele. Os valores ficam em texto puro no <code>settings.json</code>: evite guardar segredos de produção ali.</p>
+
+      <h2 id="workspaces">Workspaces</h2>
+      <p>Monte as abas e painéis do dia e use <strong>Salvar abas como workspace</strong>. <strong>Abrir workspace</strong> recria tudo, com perfis, pastas e projetos. Em <strong>Gerenciar workspaces</strong>, defina um comando inicial por painel (como <code>dotnet watch run</code> ou <code>npm run dev</code>); ao abrir, o app lista os comandos e só executa depois da sua confirmação.</p>
+
+      <h2 id="admin">Abas como administrador</h2>
+      <p>No menu ▾, o botão <strong>🛡 Admin</strong> ao lado de PowerShell, CMD e Git Bash abre o shell elevado (também na paleta). A confirmação é sempre o UAC do Windows.</p>
+      <ul>
+        <li>Com o <strong>sudo do Windows em modo inline</strong> (Windows 11 24H2+) ou o <strong>gsudo</strong>, a aba elevada fica dentro do app, marcada com 🛡.</li>
+        <li>Sem nenhum dos dois, o shell elevado abre numa janela separada.</li>
+      </ul>
+
+      <h2 id="status">Barra de status</h2>
+      <p>Mostra o shell, o projeto, a pasta atual, a branch do Git (com ● quando há alterações) e as versões do Node e do .NET <em>da pasta atual</em> (respeitando o <code>global.json</code> e os shims do Volta). Depois de instalar uma ferramenta ou trocar a versão do Node, use <strong>Recarregar ambiente</strong> na paleta: abas abertas mostram “ambiente desatualizado”, com a opção de reiniciar.</p>
+
+      <h2 id="logs">Destaque de logs e links</h2>
+      <p>Erros (vermelho), avisos (amarelo) e sucesso (verde) são destacados na saída: MSBuild, níveis <code>fail:</code>/<code>warn:</code> do ASP.NET Core, <code>npm WARN</code> e resultados de testes. O destaque é só visual: copiar e buscar veem o texto original. Ligue e desligue com <strong>Alternar destaque de logs</strong>, ou crie regras no <code>settings.json</code>:</p>
+      <pre><code>"logHighlight": {
+  "enabled": true,
+  "rules": [{ "pattern": "PEDIDO-\\d+", "ignoreCase": false, "foreground": "#58a6ff" }]
+}</code></pre>
+      <p><kbd>Ctrl</kbd>+clique abre URLs no navegador e caminhos como <code>Program.cs(42,13)</code> ou <code>src/App.tsx:10:5</code> no editor (VS Code por padrão, configurável).</p>
+
+      <h2 id="cores">Cores</h2>
+      <p>Em <strong>Configurações → Aparência</strong> ficam as cores da interface (fundo, painéis, borda, texto, destaque, erro, aviso e sucesso) e as do terminal (fundo, texto, cursor, seleção e as 16 cores ANSI). Clicar numa cor abre o seletor:</p>
+      <ul>
+        <li>campo <strong>hexadecimal</strong>, que aceita <code>#rrggbb</code>, <code>#rgb</code>, <code>rgb(18, 52, 86)</code> ou <code>18, 52, 86</code>;</li>
+        <li>controles <strong>R, G e B</strong> de 0 a 255, com a cor atual ao lado da nova;</li>
+        <li>a <strong>paleta</strong>: <strong>+ Salvar cor</strong> guarda, o botão direito remove, um clique duplo aplica.</li>
+      </ul>
+      <p>A cor só é gravada em <strong>Aplicar</strong> (ou Enter); Esc descarta. <strong>Restaurar cores padrão</strong> volta a interface ao original.</p>
+      <figure class="shot">
+        <img src="img/cores.webp" width="1440" height="900" loading="lazy" alt="Seletor de cor aberto em Aparência" />
+        <figcaption>Seletor de cor com hexadecimal, RGB e paleta.</figcaption>
+      </figure>
+
+      <h2 id="plugins">Plugins</h2>
+      <p>Plugins são <strong>só dados</strong>: uma pasta em <code>%APPDATA%\Gunslinger\plugins\</code> com um <code>plugin.json</code>. Nenhum código de plugin é executado. Eles podem trazer comandos, workspaces, perfis de shell, temas e regras de destaque, que aparecem marcados com o nome do plugin e sem editar ou excluir.</p>
+      <pre><code>{
+  "id": "kit-loja",
+  "name": "Kit Loja",
+  "version": "1.0.0",
+  "contributes": {
+    "commands": [{ "id": "db", "name": "Subir banco", "command": "docker compose up -d db" }],
+    "workspaces": [{ "id": "full", "name": "Loja", "tabs": [{ "type": "pane", "pane": { "command": "npm run dev" } }] }]
+  }
+}</code></pre>
+      <p>Em <strong>Configurações → Plugins</strong> ficam a lista, os erros de validação, ativar/desativar, abrir a pasta e recarregar.</p>
+
+      <h2 id="historico">Histórico de dados</h2>
+      <p>A cada mudança em configurações, comandos, projetos ou workspaces (pela interface ou editando os arquivos), o app guarda uma versão local. Em <strong>Configurações → Histórico</strong> você cria pontos de restauração com nome, restaura qualquer versão (o estado atual fica salvo como “Antes de restaurar”) e exclui versões. Ficam as 50 automáticas mais recentes.</p>
+
+      <h2 id="configuracao">Configuração</h2>
+      <p>Os arquivos ficam em <code>%APPDATA%\Gunslinger</code>:</p>
+      <table>
+        <thead><tr><th>Arquivo</th><th>Conteúdo</th></tr></thead>
+        <tbody>
+          <tr><td><code>settings.json</code></td><td>aparência, atalhos, editor, perfil padrão, notificações, ambientes e perfis de shell (aceita comentários)</td></tr>
+          <tr><td><code>commands.json</code></td><td>comandos salvos</td></tr>
+          <tr><td><code>projects.json</code></td><td>projetos</td></tr>
+          <tr><td><code>workspaces.json</code></td><td>workspaces</td></tr>
+          <tr><td><code>history/</code>, <code>plugins/</code></td><td>histórico de dados e plugins</td></tr>
+        </tbody>
+      </table>
+      <p>Mudanças feitas direto nos arquivos são aplicadas sem reiniciar. Se um arquivo ficar inválido, o app abre com os valores padrão, mostra a linha do erro e não grava nada nele até você corrigir (a versão anterior fica em <code>&lt;arquivo&gt;.bak</code>). <strong>Importar/Exportar</strong> (paleta) troca comandos, perfis e projetos com outras pessoas, com prévia e resolução de conflitos.</p>
+
+      <h2 id="limitacoes">Limitações conhecidas</h2>
+      <ul>
+        <li><strong>fnm por sessão:</strong> com <code>fnm env --use-on-cd</code>, a barra de status pode mostrar outra versão do Node; os comandos funcionam normalmente.</li>
+        <li><strong>WSL:</strong> em pastas internas da distribuição, a barra mostra o Git, mas não as versões de Node e .NET.</li>
+        <li><strong>Git Bash e emoji:</strong> o console do MSYS não repassa emoji; acentos funcionam.</li>
+        <li>Processos iniciados com <code>start</code> ou serviços se desligam da árvore e não são encerrados ao fechar a aba.</li>
+        <li>As notificações do Windows dependem do atalho criado pelo instalador.</li>
+      </ul>
+    </article>
+  </div>
+
+  <footer>
+    <div class="wrap">
+      <a class="brand" href="/"><img src="logo-64.png" alt="" />Gunslinger</a>
+      <span><a href="/">Início</a> · © <span id="year">2026</span> Felipe Santana</span>
+    </div>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="site.js"></script>
+</body>
+</html>
