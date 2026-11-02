@@ -3,7 +3,7 @@
 // Troque OWNER/REPO se o repositório tiver outro nome.
 window.GUNSLINGER_CONFIG = {
   version: '0.1.0',
-  sizeLabel: '~110 MB',
+  sizeLabel: '87 MB',
   installerUrl: 'https://github.com/Felip3ra/Gunslinger/releases/latest/download/Gunslinger-Setup.exe',
   // Consultado no navegador para mostrar sempre a versão e o tamanho da última release.
   releasesApi: 'https://api.github.com/repos/Felip3ra/Gunslinger/releases/latest',
