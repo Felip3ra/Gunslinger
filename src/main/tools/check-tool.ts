@@ -42,7 +42,8 @@ export async function checkTool(platform: PlatformAdapter, env: Env, tool: ToolN
     case 'node':
     case 'npm':
     case 'yarn':
-    case 'pnpm': {
+    case 'pnpm':
+    case 'bun': {
       const r = await runTool(platform, tool, tool === 'node' ? ['-v'] : ['--version'], opts);
       return r.exitCode === 0 ? { found: true, version: firstLine(r.stdout) } : { found: false };
     }

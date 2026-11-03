@@ -90,6 +90,8 @@ export const actionIds = [
   'dockerPorts.open',
   'history.open',
   'plugins.open',
+  'commandHistory.search',
+  'update.check',
 ] as const;
 export type ActionId = (typeof actionIds)[number];
 
@@ -118,6 +120,8 @@ export const defaultKeybindings: Record<ActionId, string | null> = {
   'dockerPorts.open': null,
   'history.open': null,
   'plugins.open': null,
+  'commandHistory.search': 'Ctrl+Shift+H',
+  'update.check': null,
 };
 
 export const settingsSchema = z.object({
@@ -146,7 +150,15 @@ export const settingsSchema = z.object({
   keybindings: z.record(z.string(), z.string().nullable()),
   terminal: z.object({
     copyOnCtrlCWithSelection: z.boolean(),
+    /** Guarda os comandos digitados (busca pela paleta). */
+    commandHistory: z.boolean(),
+    /** Processos iniciados pela aba que saíram da árvore dela (`start`, daemons), ao fechar a aba. */
+    detachedProcesses: z.enum(['ask', 'kill', 'keep']),
   }),
+  /** Reabre as abas e painéis da última sessão ao iniciar. */
+  session: z.object({ restore: z.boolean() }),
+  /** Procura, baixa e instala atualizações sozinho (só no app instalado). */
+  updates: z.object({ auto: z.boolean() }),
   logHighlight: logHighlightSchema,
   environments: z.array(environmentProfileSchema),
   /** Ids de plugins desativados. */
@@ -173,7 +185,9 @@ export const defaultSettings: Settings = {
   editor: { command: 'code', args: ['-g', '{file}:{line}:{column}'] },
   notifications: { longCommand: { enabled: true, thresholdSeconds: 10 } },
   keybindings: { ...defaultKeybindings },
-  terminal: { copyOnCtrlCWithSelection: true },
+  terminal: { copyOnCtrlCWithSelection: true, commandHistory: true, detachedProcesses: 'ask' },
+  session: { restore: true },
+  updates: { auto: true },
   logHighlight: defaultLogHighlight,
   environments: [],
   plugins: { disabled: [] },

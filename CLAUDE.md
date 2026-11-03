@@ -19,9 +19,9 @@ Regra de dependência: de fora para dentro. `shared` não depende de nada; servi
 
 - `src/shared`: **domínio**. Schemas zod (`model/*.ts`, reexportados por `model.ts`), contrato de IPC e regras puras (variáveis, comandos de EF/Node, `cd` por shell, importação, busca). Sem Electron nem Node.
 - `src/main`: processo principal. Único dono de PTY, sistema de arquivos, ambiente e configuração.
-  - `services/` e módulos de recurso (`pty/`, `env/`, `shells/`, `config/`, `projects/`, `status/`, `transfer/`, `tools/`, `editor/`, `elevation/`, `tests/`, `history/`, `plugins/`): **aplicação**. Dependem de `ports.ts`, nunca do Electron.
+  - `services/` e módulos de recurso (`pty/`, `env/`, `shells/`, `config/`, `projects/`, `status/`, `transfer/`, `tools/`, `editor/`, `elevation/`, `tests/`, `history/`, `plugins/`, `update/`, `session/`): **aplicação**. Dependem de `ports.ts`, nunca do Electron.
   - `ports.ts`: interfaces de diálogo, notificação, área de transferência, desktop e janela. `adapters/`: implementações Electron.
-  - `platform/`: `PlatformAdapter` (`win32.ts`, `posix.ts`). Só aqui é permitido testar `process.platform` (lint).
+  - `platform/`: `PlatformAdapter` (`win32.ts`, `posix.ts`). Só aqui é permitido testar `process.platform` (lint). `job-tracker.ts` + `win32-job-helper.ts`: grupo de processos por aba (Job Object via auxiliar em PowerShell).
   - `ipc/handlers/*.ts`: **entrada**, um arquivo por recurso; validam (zod, em `ipc/registry.ts`) e delegam a serviços, sem regra de negócio.
   - `composition.ts`: raiz de composição (instancia serviços e registra handlers). `index.ts`: ciclo de vida do app. `quit-flow.ts`: saída.
 - `src/preload`: expõe `window.gunslinger` via `contextBridge`, com lista branca de canais. Roda em sandbox.

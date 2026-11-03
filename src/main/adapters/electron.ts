@@ -49,6 +49,15 @@ export const electronDesktop: DesktopPort = {
   openExternal: (url) => openExternalSafe(url),
 };
 
+const WM_SETTINGCHANGE = 0x001a;
+
+/** Avisos do Windows de mudança de configuração (inclui variáveis de ambiente editadas no sistema). */
+export function onSystemSettingChange(win: BrowserWindow, listener: () => void): void {
+  // hookWindowMessage só existe no Windows.
+  if (typeof win.hookWindowMessage !== 'function') return;
+  win.hookWindowMessage(WM_SETTINGCHANGE, () => listener());
+}
+
 export function electronWindow(getWindow: () => BrowserWindow | null): WindowPort {
   return {
     isFocused: () => getWindow()?.isFocused() ?? false,

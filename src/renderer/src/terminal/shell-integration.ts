@@ -21,6 +21,16 @@ export interface IntegrationEvents {
   onCwd(cwd: string): void;
   onCommandStart(): void;
   onCommandEnd(event: CommandEvent): void;
+  /** Versão do Node ativa no shell (fnm), quando o script de integração a informa. */
+  onNodeVersion?(version: string): void;
+}
+
+/** Valor de uma propriedade `OSC 633;P;<nome>=<valor>`, ou null. */
+export function parseOsc633Property(data: string, name: string): string | null {
+  const prefix = `P;${name}=`;
+  if (!data.startsWith(prefix)) return null;
+  const value = data.slice(prefix.length).trim();
+  return value.length > 0 ? value : null;
 }
 
 /** Texto de uma OSC 9;9: o caminho pode vir entre aspas. */
@@ -85,6 +95,13 @@ export class ShellIntegrationTracker {
         break;
     }
     return true;
+  }
+
+  /** Propriedades informadas pelo script de integração (só NodeVersion por enquanto). */
+  osc633(data: string): boolean {
+    const node = parseOsc633Property(data, 'NodeVersion');
+    if (node) this.events.onNodeVersion?.(node);
+    return node !== null;
   }
 
   /** Enter digitado pelo usuário. */

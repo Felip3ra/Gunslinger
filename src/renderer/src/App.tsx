@@ -1,5 +1,6 @@
 import { useStore } from './store';
 import { CommandForm } from './components/CommandForm';
+import { CommandHistoryPalette } from './components/CommandHistoryPalette';
 import { Palette } from './components/Palette';
 import { ProjectSection } from './components/ProjectSection';
 import { ProjectsDialog } from './components/ProjectsDialog';
@@ -35,6 +36,7 @@ export function App(): JSX.Element {
       <CommandForm />
       <ProjectsDialog />
       <Palette />
+      <CommandHistoryPalette />
       <SettingsDialog />
       <TransferDialogs />
       <WorkspacesDialog />

@@ -3,6 +3,7 @@ import type { CustomProfile, ProfileOverride, SaveResult, ShellProfile } from '@
 import type { ConfigStore } from '../config/config-store';
 import type { EnvironmentService } from '../env/environment-service';
 import type { DetectedShell, PlatformAdapter } from '../platform/types';
+import { isIconFile, loadIconData } from './profile-icons';
 import { pickDefaultProfile, resolveProfiles, type DefaultProfileResult } from './profiles';
 
 function isDetectedShell(v: unknown): v is DetectedShell {
@@ -26,6 +27,8 @@ export class ShellService {
   private detected: DetectedShell[] = [];
   private readonly customAvailability = new Map<string, boolean>();
   private pluginProfiles: CustomProfile[] = [];
+  /** Imagens dos ícones por arquivo, por caminho. */
+  private readonly icons = new Map<string, string | null>();
   private readonly listeners = new Set<(profiles: ShellProfile[]) => void>();
 
   constructor(
@@ -71,9 +74,24 @@ export class ShellService {
     await Promise.all(
       custom.map(async (c) => this.customAvailability.set(c.id, (await this.platform.resolveExecutable(c.executable, env)) !== null)),
     );
+    await this.refreshIcons();
+  }
+
+  /** Relê as imagens dos ícones por arquivo (a mudança nas configurações pode ter trocado o arquivo). */
+  private async refreshIcons(): Promise<void> {
+    const paths = new Set(this.resolved().map((p) => p.icon).filter(isIconFile));
+    this.icons.clear();
+    await Promise.all([...paths].map(async (path) => this.icons.set(path, await loadIconData(path))));
   }
 
   list(): ShellProfile[] {
+    return this.resolved().map((p) => {
+      const data = this.icons.get(p.icon);
+      return data ? { ...p, iconData: data } : p;
+    });
+  }
+
+  private resolved(): ShellProfile[] {
     const { overrides, custom } = this.config.snapshot().settings.profiles;
     return resolveProfiles(this.detected, overrides, custom, this.customAvailability, this.pluginProfiles);
   }

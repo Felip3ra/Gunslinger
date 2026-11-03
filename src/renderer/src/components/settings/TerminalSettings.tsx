@@ -1,4 +1,5 @@
-import { useStore } from '../../store';
+import { clearCommandHistory } from '../../command-history';
+import { confirmDialog, useStore } from '../../store';
 import { update } from './update';
 
 export function TerminalSettings(): JSX.Element {
@@ -52,6 +53,35 @@ export function TerminalSettings(): JSX.Element {
       <label className="checkline">
         <input type="checkbox" checked={s.terminal.copyOnCtrlCWithSelection} onChange={(e) => void update(['terminal', 'copyOnCtrlCWithSelection'], e.target.checked)} />
         Ctrl+C copia quando há texto selecionado (sem seleção, interrompe)
+      </label>
+      <label className="checkline">
+        <input type="checkbox" checked={s.session.restore} onChange={(e) => void update(['session', 'restore'], e.target.checked)} />
+        Reabrir as abas e painéis da última sessão ao iniciar
+      </label>
+      <div className="field-row">
+        <label className="checkline">
+          <input type="checkbox" checked={s.terminal.commandHistory} onChange={(e) => void update(['terminal', 'commandHistory'], e.target.checked)} />
+          Guardar os comandos digitados para busca ({s.keybindings['commandHistory.search'] ?? 'pela paleta'}). Comandos começados por espaço não são guardados.
+        </label>
+        <button
+          type="button"
+          data-testid="clear-command-history"
+          onClick={() =>
+            void confirmDialog('Limpar histórico de comandos', 'Todos os comandos guardados serão apagados.', 'Limpar').then((ok) => {
+              if (ok) clearCommandHistory();
+            })
+          }
+        >
+          Limpar histórico
+        </button>
+      </div>
+      <label className="field">
+        <span>Ao fechar uma aba, processos que ela iniciou e saíram dela (start, servidores em segundo plano)</span>
+        <select value={s.terminal.detachedProcesses} data-testid="detached-processes" onChange={(e) => void update(['terminal', 'detachedProcesses'], e.target.value)}>
+          <option value="ask">Perguntar</option>
+          <option value="kill">Encerrar sempre</option>
+          <option value="keep">Manter rodando</option>
+        </select>
       </label>
     </>
   );

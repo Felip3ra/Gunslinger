@@ -9,7 +9,8 @@ import { api } from './api';
 import { useStore } from './store';
 import { wireProjectEvents } from './projects';
 import { wireTestEvents } from './tests';
-import { openTab, wirePtyEvents } from './tabs';
+import { restoreSessionOrOpenTab, wireSessionSaving } from './session';
+import { wirePtyEvents } from './tabs';
 import { terminals } from './terminal/terminal-registry';
 import { applyUiColors } from './ui-colors';
 
@@ -49,16 +50,18 @@ import { applyUiColors } from './ui-colors';
 };
 
 async function bootstrap(): Promise<void> {
-  const [config, profiles, ui, plugins] = await Promise.all([
+  const [config, profiles, ui, plugins, update] = await Promise.all([
     api.invoke('config:get'),
     api.invoke('profiles:list'),
     api.invoke('state:get'),
     api.invoke('plugins:get'),
+    api.invoke('update:status'),
   ]);
   const store = useStore.getState();
   store.setConfig(config);
   applyUiColors(config.settings.appearance.ui);
-  useStore.setState({ plugins });
+  useStore.setState({ plugins, update });
+  api.on('update:changed', (status) => useStore.setState({ update: status }));
   terminals.setPluginHighlightRules(plugins.contributions.highlightRules);
   store.setProfiles(profiles);
   store.setUi(ui);
@@ -107,7 +110,8 @@ async function bootstrap(): Promise<void> {
       <App />
     </StrictMode>,
   );
-  await openTab();
+  await restoreSessionOrOpenTab();
+  wireSessionSaving();
 }
 
 void bootstrap();

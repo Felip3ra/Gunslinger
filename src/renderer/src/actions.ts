@@ -30,6 +30,13 @@ export async function reloadEnvironment(): Promise<void> {
   else store.pushNotice('info', 'Ambiente recarregado. Abas novas usam o ambiente atualizado.');
 }
 
+/** Verifica (e baixa) uma versão nova e mostra o resultado na seção "Sobre" das configurações. */
+export async function checkForUpdates(): Promise<void> {
+  useStore.setState({ overlay: 'settings', settingsSection: 'sobre' });
+  const status = await api.invoke('update:check');
+  useStore.setState({ update: status });
+}
+
 /** Abre o arquivo e mostra a prévia; nada é gravado antes da confirmação. */
 export async function startImport(): Promise<void> {
   const preview = await api.invoke('transfer:previewImport');
@@ -148,6 +155,12 @@ export const actions: Record<ActionId, Action> = {
     title: 'Plugins',
     run: () => useStore.setState({ overlay: 'settings', settingsSection: 'plugins' }),
   },
+  'commandHistory.search': {
+    id: 'commandHistory.search',
+    title: 'Buscar no histórico de comandos',
+    run: () => useStore.setState({ overlay: 'commandHistory' }),
+  },
+  'update.check': { id: 'update.check', title: 'Procurar atualizações', run: () => void checkForUpdates() },
   'data.export': {
     id: 'data.export',
     title: 'Exportar comandos e perfis',

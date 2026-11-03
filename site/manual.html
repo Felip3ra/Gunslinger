@@ -42,6 +42,8 @@
       <a href="#workspaces">Workspaces</a>
       <a href="#admin">Administrador</a>
       <a href="#status">Barra de status</a>
+      <a href="#sessao">Sessão e processos</a>
+      <a href="#atualizacoes">Atualizações</a>
       <a href="#logs">Destaque e links</a>
       <a href="#cores">Cores</a>
       <a href="#plugins">Plugins</a>
@@ -52,7 +54,7 @@
 
     <article class="doc">
       <h1>Manual do Gunslinger</h1>
-      <p>O Gunslinger é um terminal para Windows 10 e 11 pensado para quem trabalha com .NET e Node.js. Este manual cobre a versão <span data-version>0.1.0</span>.</p>
+      <p>O Gunslinger é um terminal para Windows 10 e 11 pensado para quem trabalha com .NET e Node.js. Este manual cobre a versão <span data-version>1.0.0</span>.</p>
       <figure class="shot">
         <img src="img/principal.webp" width="1440" height="900" loading="lazy" alt="Tela principal com projeto aberto, log destacado e Git no painel da direita" />
         <figcaption>Tela principal: painel lateral com o projeto, terminal dividido e barra de status.</figcaption>
@@ -145,7 +147,18 @@ dotnet ef database update {migration} --connection "{conexao}"</code></pre>
       </ul>
 
       <h2 id="status">Barra de status</h2>
-      <p>Mostra o shell, o projeto, a pasta atual, a branch do Git (com ● quando há alterações) e as versões do Node e do .NET <em>da pasta atual</em> (respeitando o <code>global.json</code> e os shims do Volta). Depois de instalar uma ferramenta ou trocar a versão do Node, use <strong>Recarregar ambiente</strong> na paleta: abas abertas mostram “ambiente desatualizado”, com a opção de reiniciar.</p>
+      <p>Mostra o shell, o projeto, a pasta atual, a branch do Git (com ● quando há alterações) e as versões do Node e do .NET <em>da pasta atual</em> (respeitando o <code>global.json</code> e os shims do Volta). Com o <code>fnm</code> por sessão, o PowerShell e o Bash informam a versão do Node da aba. Quando um instalador ou o <code>setx</code> muda as variáveis de ambiente, o app recarrega o ambiente sozinho; para mudanças que não avisam o Windows, use <strong>Recarregar ambiente</strong> na paleta. Abas abertas mostram “ambiente desatualizado”, com a opção de reiniciar.</p>
+
+      <h2 id="sessao">Sessão, histórico de comandos e processos</h2>
+      <ul>
+        <li><strong>Última sessão:</strong> ao abrir, o app reabre as abas e painéis que estavam abertos (sem executar nenhum comando).</li>
+        <li><strong>Histórico de comandos:</strong> <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>H</kbd> busca nos comandos digitados em todas as abas. Enter escreve o comando no terminal; <kbd>Ctrl</kbd>+Enter executa. Comandos começados por espaço não são guardados.</li>
+        <li><strong>Processos que saem da aba:</strong> ao fechar uma aba, os processos que ela iniciou e continuam rodando fora dela (<code>start</code>, servidores em segundo plano) são listados com <strong>Encerrar</strong> ou <strong>Manter rodando</strong>.</li>
+      </ul>
+      <p>Tudo isso se ajusta em <strong>Configurações → Terminal e editor</strong>. As configurações também abrem pela engrenagem à direita das abas.</p>
+
+      <h2 id="atualizacoes">Atualizações</h2>
+      <p>O app procura versões novas ao abrir e a cada 4 horas, baixa em segundo plano e mostra <strong>Versão X pronta · Reiniciar</strong> na barra de status. A instalação acontece ao reiniciar ou na próxima vez que você fechar o app. Em <strong>Configurações → Sobre e atualizações</strong> ficam a versão, <strong>Procurar atualizações</strong> e a opção de desligar a verificação automática.</p>
 
       <h2 id="logs">Destaque de logs e links</h2>
       <p>Erros (vermelho), avisos (amarelo) e sucesso (verde) são destacados na saída: MSBuild, níveis <code>fail:</code>/<code>warn:</code> do ASP.NET Core, <code>npm WARN</code> e resultados de testes. O destaque é só visual: copiar e buscar veem o texto original. Ligue e desligue com <strong>Alternar destaque de logs</strong>, ou crie regras no <code>settings.json</code>:</p>
@@ -200,10 +213,11 @@ dotnet ef database update {migration} --connection "{conexao}"</code></pre>
 
       <h2 id="limitacoes">Limitações conhecidas</h2>
       <ul>
-        <li><strong>fnm por sessão:</strong> com <code>fnm env --use-on-cd</code>, a barra de status pode mostrar outra versão do Node; os comandos funcionam normalmente.</li>
+        <li><strong>fnm no CMD:</strong> o CMD não informa a versão do Node da sessão; a barra mostra a do ambiente do app.</li>
         <li><strong>WSL:</strong> em pastas internas da distribuição, a barra mostra o Git, mas não as versões de Node e .NET.</li>
         <li><strong>Git Bash e emoji:</strong> o console do MSYS não repassa emoji; acentos funcionam.</li>
-        <li>Processos iniciados com <code>start</code> ou serviços se desligam da árvore e não são encerrados ao fechar a aba.</li>
+        <li>Serviços do Windows e processos de abas como administrador não entram na pergunta ao fechar a aba.</li>
+        <li>O instalador não é assinado: no primeiro download o SmartScreen avisa (“Mais informações → Executar assim mesmo”).</li>
         <li>As notificações do Windows dependem do atalho criado pelo instalador.</li>
       </ul>
     </article>

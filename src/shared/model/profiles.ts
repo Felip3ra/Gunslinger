@@ -37,6 +37,8 @@ export interface ShellProfile {
   cwd: string | null;
   color: string;
   icon: string;
+  /** Imagem do ícone (data URL) quando `icon` é o caminho de um arquivo .png/.ico/.svg. */
+  iconData?: string;
   /** plugin = contribuído por um plugin (somente leitura; ajustes via overrides). */
   source: 'detected' | 'custom' | 'plugin';
   hidden: boolean;

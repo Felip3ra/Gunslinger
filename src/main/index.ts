@@ -28,7 +28,7 @@ if (!app.requestSingleInstanceLock()) {
     // Os handlers de IPC precisam existir antes de o renderer carregar.
     const services = await compose(() => mainWindow);
     mainWindow = createMainWindow();
-    installQuitFlow(mainWindow, services);
+    services.attachWindow(mainWindow, installQuitFlow(mainWindow, services));
     mainWindow.on('closed', () => {
       mainWindow = null;
     });

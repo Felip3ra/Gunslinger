@@ -26,7 +26,8 @@ Requisitos de desenvolvimento: Node.js 20+, npm e, para recompilar `@vscode/wind
 | Buscar na saída | Ctrl+F |
 | Painel lateral | Ctrl+B |
 | Copiar / colar | Ctrl+Shift+C / Ctrl+Shift+V (Ctrl+C com seleção também copia) |
-| Configurações | Ctrl+, |
+| Configurações | Ctrl+, (ou a engrenagem à direita das abas) |
+| Buscar no histórico de comandos | Ctrl+Shift+H |
 | Dividir painel à direita / abaixo | Alt+Shift+= / Alt+Shift+- |
 | Próximo / anterior painel | Alt+→ / Alt+← |
 
@@ -136,7 +137,8 @@ Editor padrão: VS Code (`code -g {file}:{line}:{column}`). Para outro editor:
 
 - Variáveis no formato `{nome}` são pedidas antes de executar, com pré-visualização do comando final. `{{` e `}}` geram chaves literais, e trechos como `{ $_.Name }` do PowerShell não viram variáveis.
 - **Executar** envia o comando com Enter; **Inserir** só digita o texto no prompt. Nada é executado sem uma dessas ações.
-- Projetos (botão ◆ no painel) podem ser .NET, Node.js ou os dois. Para .NET, o app sugere `--project` e `--startup-project` e oferece os comandos de migrations; para Node, lista os scripts de cada `package.json` (inclusive em subpastas) usando o gerenciador detectado pelo arquivo de lock.
+- Projetos (botão ◆ no painel) podem ser .NET, Node.js ou os dois. Para .NET, o app sugere `--project` e `--startup-project` e oferece os comandos de migrations; para Node, lista os scripts de cada `package.json` (inclusive em subpastas) usando o gerenciador detectado pelo campo `packageManager` ou pelo arquivo de lock (npm, yarn, pnpm ou bun).
+- Perfis customizados aceitam um ícone embutido ou uma imagem `.png`, `.ico` ou `.svg` (até 256 KB), escolhida em **Escolher imagem…**.
 - Projetos .NET com `Properties/launchSettings.json` ganham o grupo **Perfis de execução**: cada perfil do tipo Project vira `dotnet run` e `dotnet watch run` com `--launch-profile` (URLs e variáveis na descrição).
 - **Importar/Exportar** (paleta) troca comandos, perfis customizados e projetos em JSON, com prévia e resolução de conflitos.
 
@@ -152,15 +154,30 @@ Para desligar em um perfil, use `"shellIntegration": false` em `profiles.overrid
 
 ## Recarregar ambiente
 
-Depois de instalar o Node, trocar a versão com nvm-windows ou instalar uma ferramenta que mexe no PATH, use **Recarregar ambiente** na paleta. O app relê as variáveis do usuário e do sistema no Registro. Abas novas usam o ambiente novo; abas abertas mostram "ambiente desatualizado" na barra de status, com a opção de reiniciar.
+Quando um instalador ou o `setx` muda as variáveis de ambiente, o Windows avisa os programas abertos e o Gunslinger relê as variáveis do usuário e do sistema no Registro sozinho (só cria um ambiente novo se algo mudou de fato). Para mudanças que não avisam (como `reg add` ou nvm-windows), use **Recarregar ambiente** na paleta. Abas novas usam o ambiente novo; abas abertas mostram "ambiente desatualizado" na barra de status, com a opção de reiniciar.
+
+Com o `fnm` por sessão (`fnm env --use-on-cd`), o PowerShell e o Bash informam a versão do Node ativa na aba, e a barra de status mostra essa versão.
+
+## Sessão, histórico de comandos e processos
+
+- **Última sessão:** ao abrir, o app reabre as abas e painéis que estavam abertos (perfil, pasta e projeto; nenhum comando é executado). Desligue em **Configurações > Terminal e editor**.
+- **Histórico de comandos:** **Ctrl+Shift+H** busca nos comandos digitados em todas as abas. Enter escreve o comando no terminal ativo sem executar; Ctrl+Enter executa. Ficam os 500 mais recentes, sem repetição, no `state.json`. Comandos começados por espaço não são guardados; dá para desligar e limpar o histórico em **Configurações > Terminal e editor**.
+- **Processos que saem da aba:** cada aba acompanha tudo o que o shell iniciou, inclusive processos que saem da árvore dela (`start`, servidores em segundo plano). Ao fechar a aba ou o app, os que continuam rodando são listados com **Encerrar** ou **Manter rodando**. A opção **Ao fechar uma aba…** troca para encerrar sempre ou manter sempre. Sair com `exit` mantém os processos.
+
+## Atualizações
+
+O app instalado procura versões novas nas releases do GitHub ao abrir e a cada 4 horas, baixa em segundo plano e mostra **Versão X pronta · Reiniciar** na barra de status. A instalação acontece ao reiniciar pelo botão ou na próxima vez que o app fechar. Em **Configurações > Sobre e atualizações** ficam a versão, **Procurar atualizações** e a opção de desligar a verificação automática.
+
+Para publicar uma versão: `npm version 0.2.0` e `git push --follow-tags`. O workflow `release.yml` confere se a tag é igual à versão do `package.json`, gera o instalador e publica a release com o `latest.yml` que a atualização automática lê.
 
 ## Limitações conhecidas
 
-- **fnm por sessão:** com `fnm env --use-on-cd`, o Node só existe dentro do shell. A barra de status consulta `node -v` com o ambiente do app e pode mostrar outra versão (ou "Node não encontrado"). Os comandos funcionam: o aviso de ferramenta ausente oferece **Executar mesmo assim**.
+- **fnm no CMD:** o CMD não tem como informar a versão do Node da sessão; a barra de status mostra a do ambiente do app.
 - **WSL:** em pastas internas da distribuição, a barra de status mostra o Git (consultado pelo `git` do Linux), mas não mostra as versões de Node e .NET. Distribuições cujo shell padrão não é bash abrem sem integração.
 - **Git Bash e emoji:** o console do MSYS não repassa caracteres fora do plano básico do Unicode (como emoji). Acentos e CJK funcionam; no CMD, PowerShell e WSL o emoji aparece normalmente.
 - **ConPTY:** o app usa o ConPTY do sistema. O ConPTY embutido no node-pty descarta as sequências da integração com o shell.
-- **Processos desligados da árvore** (iniciados com `start`, serviços) não são encerrados ao fechar a aba.
+- **Serviços e abas elevadas:** serviços do Windows não são filhos do shell, e o Gunslinger não acompanha os processos de abas como administrador; esses não entram na pergunta ao fechar a aba.
+- **Assinatura:** o instalador não é assinado; o SmartScreen avisa no primeiro download ("Mais informações > Executar assim mesmo").
 - Notificações do Windows dependem do atalho no Menu Iniciar criado pelo instalador; rodando via `npm run dev`, podem não aparecer.
 
 ## Desenvolvimento

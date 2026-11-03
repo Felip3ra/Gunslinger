@@ -21,6 +21,8 @@ export interface Tab {
   envProfileId: string | null;
   /** Quando a sessão atual começou (para reconhecer o UAC recusado). */
   startedAt: number;
+  /** Versão do Node informada pelo shell (fnm por sessão); null = a do ambiente do app. */
+  nodeVersion: string | null;
 }
 
 /** Abas abertas e a aba ativa. */

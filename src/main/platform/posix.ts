@@ -45,6 +45,10 @@ export const posixAdapter: PlatformAdapter = {
     return { file, args };
   },
 
+  createProcessTracker() {
+    return null;
+  },
+
   async listListeningPorts() {
     return [];
   },

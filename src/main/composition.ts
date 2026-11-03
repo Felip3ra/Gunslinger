@@ -4,7 +4,8 @@ import { join } from 'node:path';
 import { app, ipcMain, type BrowserWindow } from 'electron';
 import { spawn as ptySpawn } from 'node-pty';
 import type { EventMap } from '@shared/ipc-contract';
-import { electronClipboard, electronDesktop, electronDialogs, electronNotifier, electronWindow } from './adapters/electron';
+import { electronClipboard, electronDesktop, electronDialogs, electronNotifier, electronWindow, onSystemSettingChange } from './adapters/electron';
+import { electronUpdaterPort } from './adapters/electron-updater';
 import { ConfigStore } from './config/config-store';
 import { ElevationService, SUDO_REGISTRY_KEY } from './elevation/elevation-service';
 import { fromProcessEnv, getVar } from './env/env-utils';
@@ -18,7 +19,11 @@ import { registerTestHandlers } from './ipc/handlers/tests';
 import { registerDockerPortsHandlers } from './ipc/handlers/docker-ports';
 import { registerHistoryHandlers } from './ipc/handlers/history';
 import { registerPluginHandlers } from './ipc/handlers/plugins';
+import { registerUpdateHandlers } from './ipc/handlers/update';
 import { PluginService } from './plugins/plugin-service';
+import type { QuitFn } from './quit-flow';
+import { LastSession } from './session/last-session';
+import { UpdateService } from './update/update-service';
 import { HistoryService } from './history/history-service';
 import { DockerService } from './services/docker-service';
 import { PortService } from './services/port-service';
@@ -65,7 +70,12 @@ export interface AppServices {
   dialogs: DialogPort;
   /** Libera observadores e recursos antes de sair. */
   dispose(): void;
+  /** Liga a janela principal: avisos do SO e o fechamento usado pela atualização. */
+  attachWindow(win: BrowserWindow, quit: QuitFn): void;
 }
+
+/** Espera o Windows terminar de espalhar o aviso (vários chegam juntos) antes de reler o registro. */
+const ENV_CHANGE_DEBOUNCE_MS = 1000;
 
 /** Raiz de composição: instancia os serviços, liga os eventos e registra os handlers de IPC. */
 export async function compose(getWindow: () => BrowserWindow | null): Promise<AppServices> {
@@ -99,6 +109,8 @@ export async function compose(getWindow: () => BrowserWindow | null): Promise<Ap
     envGeneration: () => env.current().generation,
     defaultCwd: () => getVar(env.current().env, 'USERPROFILE') ?? homedir(),
     environmentVariables: (id) => config.snapshot().settings.environments.find((e) => e.id === id)?.variables,
+    tracker: platform.createProcessTracker(env.current().env),
+    detachedMode: () => config.snapshot().settings.terminal.detachedProcesses,
   });
 
   config.onChange((snapshot) => send('config:changed', snapshot));
@@ -163,8 +175,9 @@ export async function compose(getWindow: () => BrowserWindow | null): Promise<Ap
   });
 
   const ipc = new IpcRegistry(ipcMain);
-  registerTerminalHandlers(ipc, { shells, pty, status, elevation, plainLaunch });
-  registerConfigHandlers(ipc, { config, env });
+  registerTerminalHandlers(ipc, { shells, pty, status, elevation, dialogs, plainLaunch });
+  const lastSession = new LastSession((tabs) => config.patchState({ lastSession: tabs }));
+  registerConfigHandlers(ipc, { config, env, lastSession });
   registerProjectHandlers(ipc, { catalog, analysis, config, dialogs, platform, env });
   registerTestHandlers(ipc, { runner, config });
   const history = new HistoryService(join(config.dir, 'history'), config);
@@ -177,11 +190,31 @@ export async function compose(getWindow: () => BrowserWindow | null): Promise<Ap
   });
   registerDesktopHandlers(ipc, { editor, desktop: electronDesktop, clipboard: electronClipboard, notifier, transfer, config });
 
+  const update = new UpdateService({
+    updater: electronUpdaterPort(),
+    currentVersion: app.getVersion(),
+    auto: () => config.snapshot().settings.updates.auto,
+    onChange: (s) => send('update:changed', s),
+  });
+  update.start();
+  let quit: QuitFn | null = null;
+  registerUpdateHandlers(ipc, { update, install: () => void quit?.(() => update.install()) });
+
   return {
     config,
     pty,
     dialogs,
+    attachWindow: (win, quitFn) => {
+      quit = quitFn;
+      let timer: NodeJS.Timeout | null = null;
+      onSystemSettingChange(win, () => {
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(() => void env.reloadIfChanged(), ENV_CHANGE_DEBOUNCE_MS);
+      });
+    },
     dispose: () => {
+      lastSession.freeze();
+      update.stop();
       config.stopWatching();
       history.stop();
       plugins.stop();

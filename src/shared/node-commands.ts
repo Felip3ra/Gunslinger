@@ -17,9 +17,11 @@ export function buildNodeCommand(kind: NodeCommandKind, pm: PackageManager, yarn
     case 'add':
       return pm === 'npm' ? 'npm install {pacote}' : `${pm} add {pacote}`;
     case 'addDev':
+      if (pm === 'bun') return 'bun add --dev {pacote}';
       return pm === 'npm' ? 'npm install -D {pacote}' : `${pm} add -D {pacote}`;
     case 'npx':
       if (pm === 'pnpm') return 'pnpm dlx {comando}';
+      if (pm === 'bun') return 'bunx {comando}';
       if (pm === 'yarn' && yarnBerry) return 'yarn dlx {comando}';
       return 'npx {comando}';
   }

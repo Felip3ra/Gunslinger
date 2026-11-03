@@ -1,6 +1,7 @@
 import { activeTab, useStore } from '../store';
 import { restartTab, profileName } from '../tabs';
 import { reloadEnvironment } from '../actions';
+import { api } from '../api';
 
 export function StatusBar(): JSX.Element {
   const tab = useStore(activeTab);
@@ -10,6 +11,9 @@ export function StatusBar(): JSX.Element {
   const project = tab?.projectId ? projects?.find((p) => p.id === tab.projectId) : undefined;
   const environment = useStore((s) => (tab?.envProfileId ? s.config?.settings.environments.find((e) => e.id === tab.envProfileId) : undefined));
   const outdated = tab && tab.status === 'running' && tab.envGeneration < envGeneration;
+  const update = useStore((s) => s.update);
+  // fnm por sessão: a versão informada pelo shell vale mais que a do ambiente do app.
+  const nodeVersion = tab?.nodeVersion ?? status?.node?.version ?? null;
 
   return (
     <div className="statusbar" data-testid="statusbar">
@@ -41,15 +45,30 @@ export function StatusBar(): JSX.Element {
         </span>
       )}
       <span className="spacer" />
-      {status?.node && (
-        <button className="status-item link" data-testid="status-node" onClick={() => status.node?.version === null && void reloadEnvironment()}>
-          {status.node.version ? `Node ${status.node.version}` : 'Node não encontrado'}
+      {(status?.node || tab?.nodeVersion) && (
+        <button
+          className="status-item link"
+          data-testid="status-node"
+          title={tab?.nodeVersion ? 'Versão do Node desta aba (fnm)' : undefined}
+          onClick={() => nodeVersion === null && void reloadEnvironment()}
+        >
+          {nodeVersion ? `Node ${nodeVersion}` : 'Node não encontrado'}
         </button>
       )}
       {status?.dotnet && (
         <button className="status-item link" data-testid="status-dotnet" onClick={() => status.dotnet?.version === null && void reloadEnvironment()}>
           {status.dotnet.version ? `.NET ${status.dotnet.version}` : '.NET não encontrado'}
         </button>
+      )}
+      {update?.state === 'ready' && (
+        <button className="status-item update" data-testid="status-update" title="Fecha o app, instala e abre de novo" onClick={() => void api.invoke('update:install')}>
+          ⬆ Versão {update.version} pronta · Reiniciar
+        </button>
+      )}
+      {update?.state === 'downloading' && (
+        <span className="status-item" data-testid="status-update-progress">
+          ⬇ Baixando {update.version}… {update.percent}%
+        </span>
       )}
       {outdated && (
         <button className="status-item warning" data-testid="env-outdated" onClick={() => void restartTab(tab.key)} title="Reiniciar aba com o ambiente atual">

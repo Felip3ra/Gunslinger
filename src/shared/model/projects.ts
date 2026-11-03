@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const packageManagers = ['npm', 'yarn', 'pnpm'] as const;
+export const packageManagers = ['npm', 'yarn', 'pnpm', 'bun'] as const;
 export type PackageManager = (typeof packageManagers)[number];
 
 export const projectSchema = z.object({

@@ -1,7 +1,9 @@
 import { pickDefaultProfile } from '@shared/profiles';
+import { rememberCommand } from './command-history';
 import { nextPane, panesOf, type SplitDirection } from './layout/layout';
 import { api } from './api';
-import { confirmDialog, groupOf, profileOf, useStore, type Tab, type TabGroup } from './store';
+import type { DetachedProcess } from '@shared/ipc-contract';
+import { askDialog, confirmDialog, groupOf, profileOf, useStore, type Tab, type TabGroup } from './store';
 import { terminals, type CommandEvent } from './terminal/terminal-registry';
 
 let tabCounter = 0;
@@ -23,6 +25,7 @@ function onCommandEnd(key: string, event: CommandEvent): void {
   store.updateTab(key, { commandRunning: false });
   const tab = store.tabs.find((t) => t.key === key);
   sendState(tab, { commandRunning: false, lastExitCode: event.exitCode, commandFinished: true });
+  rememberCommand(event.command, tab?.cwd ?? null, event.exitCode);
   const settings = store.config?.settings.notifications.longCommand;
   if (tab?.sessionId && settings?.enabled && event.durationMs >= settings.thresholdSeconds * 1000) {
     // O main só mostra a notificação se a janela estiver fora de foco.
@@ -109,6 +112,7 @@ export async function openTab(options: OpenTabOptions = {}): Promise<string | nu
       sendState(useStore.getState().tabs.find((t) => t.key === key), { commandRunning: true });
     },
     onCommandEnd: (event) => onCommandEnd(key, event),
+    onNodeVersion: (nodeVersion) => useStore.getState().updateTab(key, { nodeVersion }),
   });
 
   store.addTab({
@@ -126,6 +130,7 @@ export async function openTab(options: OpenTabOptions = {}): Promise<string | nu
     elevated: !!options.elevated,
     envProfileId: options.envProfileId ?? null,
     startedAt: Date.now(),
+    nodeVersion: null,
   });
   if (options.detached) {
     // o grupo é montado por quem chamou
@@ -179,9 +184,27 @@ export async function closeTab(key: string): Promise<void> {
     // Remove a sessão da aba antes do kill, para ignorar o pty:exit que o kill dispara.
     const sessionId = tab.sessionId;
     useStore.getState().updateTab(key, { sessionId: null });
-    await api.invoke('pty:kill', { sessionId });
+    const killed = await api.invoke('pty:kill', { sessionId });
+    // Pergunta antes de descartar a aba: se era a última, o app fecha em seguida.
+    if (killed.token) await askDetached(killed.token, killed.detached);
   }
   disposeTab(key);
+}
+
+/** Processos que a aba iniciou e saíram da árvore dela (`start`, daemons): encerrar ou manter. */
+async function askDetached(token: string, detached: DetachedProcess[]): Promise<void> {
+  const names = detached.slice(0, 8).map((p) => `${p.name || '?'} (${p.pid})`);
+  if (detached.length > names.length) names.push(`… e mais ${detached.length - names.length}`);
+  const choice = await askDialog({
+    title: 'Processos iniciados pela aba',
+    message: 'Estes processos foram iniciados pela aba e continuam rodando fora dela:',
+    detail: names.join('\n'),
+    buttons: [
+      { label: 'Manter rodando', value: 'keep' },
+      { label: 'Encerrar', value: 'kill', primary: true },
+    ],
+  });
+  if (choice === 'kill') await api.invoke('pty:killDetached', { token }).catch(() => undefined);
 }
 
 /** Reinicia o shell de uma aba encerrada ou com erro, com o mesmo perfil e a última pasta. */

@@ -20,9 +20,17 @@ import type { DockerAction, DockerListResult } from './docker';
 import type { ListeningPort } from './ports';
 import type { HistoryEntry } from './history';
 import type { PluginsSnapshot } from './plugins';
+import type { UpdateStatus } from './update';
+import type { WorkspaceLayout } from './model';
 import type { ConflictDecision, ExportSelection, ImportPreview, ImportResult } from './transfer';
 
-export type ToolName = 'dotnet' | 'dotnet-ef' | 'node' | 'npm' | 'yarn' | 'pnpm';
+export type ToolName = 'dotnet' | 'dotnet-ef' | 'node' | 'npm' | 'yarn' | 'pnpm' | 'bun';
+
+/** Processo iniciado pela aba que continua rodando fora da árvore dela. */
+export interface DetachedProcess {
+  pid: number;
+  name: string;
+}
 
 /** Requisição/resposta: ipcRenderer.invoke ↔ ipcMain.handle. */
 export interface InvokeMap {
@@ -39,7 +47,19 @@ export interface InvokeMap {
   /** Abre o shell elevado numa janela separada do Windows (UAC). */
   'elevation:openExternal': { req: { profileId: string; cwd?: string }; res: OpenResult };
   'pty:isBusy': { req: { sessionId: string }; res: boolean };
-  'pty:kill': { req: { sessionId: string }; res: void };
+  /**
+   * Encerra o shell e a árvore. `detached`: processos iniciados pela aba que saíram da árvore e
+   * continuam rodando (com `detachedProcesses: 'ask'`); `pty:killDetached` com o token os encerra.
+   */
+  'pty:kill': { req: { sessionId: string }; res: { token: string | null; detached: DetachedProcess[] } };
+  'pty:killDetached': { req: { token: string }; res: void };
+  /** Abas e painéis abertos, gravados para a próxima abertura (ignorado durante o fechamento do app). */
+  'session:save': { req: { tabs: WorkspaceLayout[] }; res: void };
+  'profiles:pickIcon': { req: void; res: string | null };
+  'update:status': { req: void; res: UpdateStatus };
+  'update:check': { req: void; res: UpdateStatus };
+  /** Fecha o app (com a confirmação de abas ocupadas) e instala a versão baixada. */
+  'update:install': { req: void; res: void };
   'config:get': { req: void; res: ConfigSnapshot };
   'settings:update': { req: { path: (string | number)[]; value: unknown }; res: SaveResult };
   'settings:openFile': { req: void; res: OpenResult };
@@ -113,6 +133,7 @@ export interface EventMap {
   'notification:clicked': { sessionId: string };
   'tests:output': { runId: string; data: string };
   'plugins:changed': PluginsSnapshot;
+  'update:changed': UpdateStatus;
   'tests:finished': { runId: string; result: TestRunResult | null; error: string | null; cancelled: boolean };
 }
 

@@ -27,9 +27,9 @@ export interface DialogRequest {
 export interface OverlaysSlice {
   notices: Notice[];
   dialog: DialogRequest | null;
-  overlay: 'palette' | 'settings' | 'dockerPorts' | null;
+  overlay: 'palette' | 'commandHistory' | 'settings' | 'dockerPorts' | null;
   /** Seção a abrir nas configurações (consumida pelo diálogo). */
-  settingsSection: 'historico' | 'plugins' | null;
+  settingsSection: 'historico' | 'plugins' | 'sobre' | null;
   variablesPrompt: VariablesPrompt | null;
   /** Comando em edição no formulário (null = fechado; id vazio = novo). */
   editingCommand: SavedCommand | null;

@@ -1,5 +1,6 @@
 import type { ElevationService } from '../../elevation/elevation-service';
 import type { LaunchSpec } from '../../integration/launch';
+import type { DialogPort } from '../../ports';
 import { NotFoundError } from '../registry';
 import type { PtyManager } from '../../pty/pty-manager';
 import type { ShellService } from '../../shells/shell-service';
@@ -14,6 +15,7 @@ export function registerTerminalHandlers(
     pty: PtyManager;
     status: StatusService;
     elevation: ElevationService;
+    dialogs: DialogPort;
     /** Linha de comando sem integração, para a janela elevada externa. */
     plainLaunch(profileId: string, cwd?: string): LaunchSpec | null;
   },
@@ -23,6 +25,9 @@ export function registerTerminalHandlers(
   ipc.handle('profiles:save', (p) => shells.saveCustom(p));
   ipc.handle('profiles:delete', ({ id }) => shells.deleteCustom(id));
   ipc.handle('profiles:setOverride', ({ id, override }) => shells.setOverride(id, override));
+  ipc.handle('profiles:pickIcon', () =>
+    deps.dialogs.openFile({ title: 'Ícone do perfil', filters: [{ name: 'Imagens', extensions: ['png', 'ico', 'svg', 'jpg', 'jpeg', 'gif', 'webp'] }] }),
+  );
 
   ipc.handle('pty:create', async ({ elevated, ...req }) => {
     let mechanism;
@@ -45,6 +50,7 @@ export function registerTerminalHandlers(
   });
   ipc.handle('pty:isBusy', ({ sessionId }) => pty.isBusy(sessionId));
   ipc.handle('pty:kill', ({ sessionId }) => pty.kill(sessionId));
+  ipc.handle('pty:killDetached', ({ token }) => pty.killDetached(token));
   ipc.on('pty:write', ({ sessionId, data }) => pty.write(sessionId, data));
   ipc.on('pty:resize', ({ sessionId, cols, rows }) => pty.resize(sessionId, cols, rows));
   ipc.on('pty:ack', ({ sessionId, bytes }) => pty.ack(sessionId, bytes));

@@ -7,6 +7,8 @@ const LOCKFILES: [string, PackageManager][] = [
   ['package-lock.json', 'npm'],
   ['yarn.lock', 'yarn'],
   ['pnpm-lock.yaml', 'pnpm'],
+  ['bun.lock', 'bun'],
+  ['bun.lockb', 'bun'],
 ];
 
 async function exists(path: string): Promise<boolean> {
@@ -54,7 +56,7 @@ export async function resolvePackageManager(
     return false;
   };
 
-  const field = typeof packageManagerField === 'string' ? /^(npm|yarn|pnpm)@(\d+)/.exec(packageManagerField) : null;
+  const field = typeof packageManagerField === 'string' ? /^(npm|yarn|pnpm|bun)@(\d+)/.exec(packageManagerField) : null;
   const yarnBerryFromField = field?.[1] === 'yarn' ? Number(field[2]) >= 2 : null;
 
   if (override) {
@@ -66,7 +68,8 @@ export async function resolvePackageManager(
   }
   for (const d of dirs) {
     const found: PackageManager[] = [];
-    for (const [file, pm] of LOCKFILES) if (await exists(join(d, file))) found.push(pm);
+    // bun.lock e bun.lockb (formato antigo) podem coexistir durante a migração.
+    for (const [file, pm] of LOCKFILES) if (!found.includes(pm) && (await exists(join(d, file)))) found.push(pm);
     if (found.length === 1) {
       const pm = found[0]!;
       return { packageManager: pm, source: 'lockfile', yarnBerry: pm === 'yarn' && (await hasYarnrcYml()), warnings };

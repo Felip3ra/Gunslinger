@@ -1027,3 +1027,51 @@ kbd {
 .color-actions .spacer {
   flex: 1;
 }
+
+/* ---------- campo com botão ao lado ---------- */
+.inline-input {
+  display: flex;
+  gap: 6px;
+}
+.inline-input input {
+  flex: 1;
+  min-width: 0;
+}
+img.profile-icon {
+  object-fit: contain;
+  flex: none;
+}
+
+/* ---------- botão de configurações (fixo à direita da barra de abas) ---------- */
+.tabbar-settings {
+  position: sticky;
+  right: 0;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  border: none;
+  border-left: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+  flex: none;
+}
+.tabbar-settings:hover {
+  color: var(--text);
+  background: var(--bg);
+}
+
+/* ---------- histórico de comandos e atualização ---------- */
+.palette-title.mono {
+  font-family: "Cascadia Mono", Consolas, monospace;
+}
+.palette-kind.history-failed {
+  color: var(--danger);
+}
+.status-item.update {
+  color: var(--accent);
+}
+.about-version {
+  font-size: 1.1em;
+}

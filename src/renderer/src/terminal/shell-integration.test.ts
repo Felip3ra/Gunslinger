@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { parseOsc99, ShellIntegrationTracker, type BufferReader, type CommandEvent } from './shell-integration';
+import { parseOsc633Property, parseOsc99, ShellIntegrationTracker, type BufferReader, type CommandEvent } from './shell-integration';
 
 /** Buffer falso: linhas de texto, cursor ajustável e marcação de linhas quebradas. */
 function fakeBuffer() {
@@ -103,5 +103,21 @@ describe('ShellIntegrationTracker', () => {
     const { tracker, events } = setup();
     expect(tracker.osc9('9;"D:\\x"')).toBe(true);
     expect(events.onCwd).toHaveBeenCalledWith('D:\\x');
+  });
+});
+
+describe('OSC 633 (propriedades)', () => {
+  it('lê a versão do Node e ignora outras propriedades', () => {
+    expect(parseOsc633Property('P;NodeVersion=v20.11.0', 'NodeVersion')).toBe('v20.11.0');
+    expect(parseOsc633Property('P;Cwd=C:\\src', 'NodeVersion')).toBeNull();
+    expect(parseOsc633Property('P;NodeVersion=', 'NodeVersion')).toBeNull();
+  });
+
+  it('avisa a versão do Node ao rastreador', () => {
+    const onNodeVersion = vi.fn();
+    const buffer: BufferReader = { cursor: () => ({ x: 0, y: 0 }), lineText: () => '', isWrapped: () => false };
+    const tracker = new ShellIntegrationTracker(buffer, { onCwd() {}, onCommandStart() {}, onCommandEnd() {}, onNodeVersion });
+    expect(tracker.osc633('P;NodeVersion=v18.19.1')).toBe(true);
+    expect(onNodeVersion).toHaveBeenCalledWith('v18.19.1');
   });
 });

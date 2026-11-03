@@ -1,7 +1,8 @@
 # Integração do Gunslinger com o Bash (Git Bash e WSL).
 # Usado via `bash --rcfile gunslinger.bash -i`. Como --rcfile não funciona com --login,
 # este arquivo emula o login: /etc/profile e depois o primeiro perfil do usuário encontrado.
-# Emite: OSC 133;C (início do comando), OSC 133;D;<código> (fim), OSC 9;9 (pasta atual), OSC 133;A/B.
+# Emite: OSC 133;C (início do comando), OSC 133;D;<código> (fim), OSC 9;9 (pasta atual), OSC 133;A/B
+# e OSC 633;P;NodeVersion=<versão> quando o fnm troca a versão do Node na sessão.
 
 if [ -z "$__GUNSLINGER_LOGIN_DONE" ]; then
   __GUNSLINGER_LOGIN_DONE=1
@@ -38,6 +39,19 @@ if [ -z "$__GUNSLINGER_INTEGRATION" ]; then
     printf '%s' "$__gs_last_winpath"
   }
 
+  # fnm: versão do Node desta sessão (FNM_MULTISHELL_PATH é um link para a pasta da versão).
+  __gs_node=
+  __gs_node_version() {
+    [ -n "$FNM_MULTISHELL_PATH" ] || return 0
+    local target
+    target=$(readlink "$FNM_MULTISHELL_PATH" 2>/dev/null) || return 0
+    [[ $target =~ v[0-9]+\.[0-9]+\.[0-9]+ ]] || return 0
+    if [ "${BASH_REMATCH[0]}" != "$__gs_node" ]; then
+      __gs_node=${BASH_REMATCH[0]}
+      printf '\033]633;P;NodeVersion=%s\033\\' "$__gs_node"
+    fi
+  }
+
   __gs_prompt_command() {
     local code=$?
     if [ -z "$__gs_first" ]; then
@@ -45,6 +59,7 @@ if [ -z "$__GUNSLINGER_INTEGRATION" ]; then
     fi
     __gs_first=
     printf '\033]9;9;"%s"\033\\' "$(__gs_winpath)"
+    __gs_node_version
     printf '\033]133;A\033\\'
     # Devolve o código original para o PROMPT_COMMAND do usuário e o prompt do Git.
     return $code

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
 import { useStore } from '../store';
+import { About } from './settings/About';
 import { Appearance } from './settings/Appearance';
 import { Environments } from './settings/Environments';
 import { History } from './settings/History';
@@ -16,7 +17,8 @@ export type SettingsSection =
   | 'perfis'
   | 'ambientes'
   | 'plugins'
-  | 'historico';
+  | 'historico'
+  | 'sobre';
 
 export function SettingsDialog(): JSX.Element | null {
   const open = useStore((s) => s.overlay === 'settings');
@@ -44,6 +46,7 @@ export function SettingsDialog(): JSX.Element | null {
     ['ambientes', 'Ambientes'],
     ['plugins', 'Plugins'],
     ['historico', 'Histórico'],
+    ['sobre', 'Sobre e atualizações'],
   ];
   return (
     <div className="modal-backdrop">
@@ -83,6 +86,7 @@ export function SettingsDialog(): JSX.Element | null {
         {section === 'ambientes' && <Environments />}
         {section === 'plugins' && <Plugins />}
         {section === 'historico' && <History />}
+        {section === 'sobre' && <About />}
       </div>
     </div>
   );

@@ -34,7 +34,7 @@ export function testCommand(target: TestTarget, pm: PackageManager, resultDir: s
   }
   const outputFile = join(resultDir, resultFile);
   const reporter = target.framework === 'vitest' ? ['--run', '--reporter=json', `--outputFile=${outputFile}`] : ['--json', `--outputFile=${outputFile}`];
-  // npm precisa de "--" para repassar argumentos ao script; yarn e pnpm repassam direto.
+  // npm precisa de "--" para repassar argumentos ao script; yarn, pnpm e bun repassam direto.
   return { tool: pm, args: pm === 'npm' ? ['run', 'test', '--', ...reporter, ...filterArgs(target, filter)] : ['run', 'test', ...reporter, ...filterArgs(target, filter)] };
 }
 

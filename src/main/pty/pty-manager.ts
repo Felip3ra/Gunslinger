@@ -6,7 +6,7 @@ import type { ShellProfile } from '@shared/model';
 import type { Env } from '../env/env-utils';
 import { NotFoundError } from '../ipc/registry';
 import type { LaunchSpec } from '../integration/launch';
-import type { PlatformAdapter } from '../platform/types';
+import type { PlatformAdapter, ProcessTracker, TrackedProcess } from '../platform/types';
 
 export const FLUSH_INTERVAL_MS = 5;
 export const FLUSH_MAX_BYTES = 64 * 1024;
@@ -26,7 +26,20 @@ export interface PtyManagerDeps {
   defaultCwd(): string;
   /** Variáveis de um perfil de ambiente (resolvidas no main; o renderer só manda o id). */
   environmentVariables(envProfileId: string): Record<string, string> | undefined;
+  /** Acompanha os processos que saem da árvore do shell (null: sem suporte). */
+  tracker?: ProcessTracker | null;
+  /** O que fazer com eles ao fechar a aba (padrão: manter). */
+  detachedMode?: () => 'ask' | 'kill' | 'keep';
 }
+
+/** Resultado de encerrar sessões: processos que saíram da árvore, à espera da decisão do usuário. */
+export interface KillResult {
+  /** Passado a `killDetached` para encerrá-los; null quando não há o que perguntar. */
+  token: string | null;
+  detached: TrackedProcess[];
+}
+
+const NOTHING_DETACHED: KillResult = { token: null, detached: [] };
 
 export interface SessionInfo {
   id: string;
@@ -53,6 +66,8 @@ interface Session extends SessionInfo {
   flushTimer: NodeJS.Timeout | null;
   unacked: number;
   paused: boolean;
+  /** Encerrada pelo Gunslinger: quem encerrou libera o grupo de processos. */
+  killing: boolean;
 }
 
 function isAlive(pid: number): boolean {
@@ -67,6 +82,8 @@ function isAlive(pid: number): boolean {
 export class PtyManager {
   private readonly sessions = new Map<string, Session>();
   private readonly listeners = new Set<(info: SessionInfo, event: 'created' | 'state' | 'exit') => void>();
+  /** Processos fora da árvore aguardando a resposta do usuário, por token. */
+  private readonly held = new Map<string, TrackedProcess[]>();
 
   constructor(private readonly deps: PtyManagerDeps) {}
 
@@ -114,14 +131,18 @@ export class PtyManager {
       flushTimer: null,
       unacked: 0,
       paused: false,
+      killing: false,
     };
     this.sessions.set(session.id, session);
+    this.deps.tracker?.track(session.id, pty.pid);
 
     pty.onData((data) => this.enqueue(session, data));
     pty.onExit(({ exitCode }) => {
       this.flush(session);
       session.exited = true;
       this.sessions.delete(session.id);
+      // Saída pelo próprio shell (exit): os processos que ele deixou continuam rodando.
+      if (!session.killing) void this.deps.tracker?.release(session.id);
       this.deps.send('pty:exit', { sessionId: session.id, exitCode });
       this.notify(session, 'exit');
     });
@@ -200,10 +221,47 @@ export class PtyManager {
     return descendants.length > 0;
   }
 
-  /** Encerra o shell e todos os descendentes (capturados antes, para alcançar os que perderem o pai). */
-  async kill(sessionId: string): Promise<void> {
+  /**
+   * Encerra o shell e todos os descendentes (capturados antes, para alcançar os que perderem o pai).
+   * Os que já tinham saído da árvore seguem `detachedMode`.
+   */
+  async kill(sessionId: string): Promise<KillResult> {
+    return this.decide(await this.killSession(sessionId));
+  }
+
+  async killAll(): Promise<KillResult> {
+    const found = await Promise.all([...this.sessions.keys()].map((id) => this.killSession(id)));
+    return this.decide(found.flat());
+  }
+
+  /** Encerra os processos guardados sob o token (o usuário escolheu encerrar). */
+  async killDetached(token: string): Promise<void> {
+    const list = this.held.get(token);
+    this.held.delete(token);
+    if (list) await this.killProcesses(list);
+  }
+
+  private async decide(found: TrackedProcess[]): Promise<KillResult> {
+    const mode = this.deps.detachedMode?.() ?? 'keep';
+    if (found.length === 0 || mode === 'keep') return NOTHING_DETACHED;
+    if (mode === 'kill') {
+      await this.killProcesses(found);
+      return NOTHING_DETACHED;
+    }
+    const token = randomUUID();
+    this.held.set(token, found);
+    return { token, detached: found };
+  }
+
+  private async killProcesses(list: TrackedProcess[]): Promise<void> {
+    await Promise.all(list.map((p) => this.deps.platform.killTree(p.pid, [])));
+  }
+
+  /** Devolve os processos do grupo da sessão que continuam vivos fora da árvore. */
+  private async killSession(sessionId: string): Promise<TrackedProcess[]> {
     const session = this.sessions.get(sessionId);
-    if (!session) return;
+    if (!session) return [];
+    session.killing = true;
     const descendants = await this.deps.platform.listDescendants(session.pid).catch(() => []);
     try {
       session.pty.kill();
@@ -216,17 +274,17 @@ export class PtyManager {
       await this.deps.platform.killTree(session.pid, survivors);
     }
     this.sessions.delete(sessionId);
-  }
-
-  async killAll(): Promise<void> {
-    await Promise.all([...this.sessions.keys()].map((id) => this.kill(id)));
+    const known = new Set([session.pid, ...descendants]);
+    const left = (await this.deps.tracker?.release(sessionId)) ?? [];
+    return left.filter((p) => !known.has(p.pid));
   }
 
   async restart(sessionId: string, cols: number, rows: number): Promise<SessionInfo> {
     const session = this.sessions.get(sessionId);
     if (!session) throw new NotFoundError('Sessão não encontrada');
     const { profileId, cwd, projectId, elevation, envProfileId } = session;
-    await this.kill(sessionId);
+    // Reiniciar não pergunta: o que saiu da árvore continua rodando.
+    await this.killSession(sessionId);
     return this.create({ profileId, cwd, cols, rows, ...(projectId ? { projectId } : {}), ...(envProfileId ? { envProfileId } : {}) }, elevation);
   }
 

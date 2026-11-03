@@ -22,6 +22,7 @@ export interface TerminalCallbacks {
   onCwd(cwd: string): void;
   onCommandStart(): void;
   onCommandEnd(event: CommandEvent): void;
+  onNodeVersion(version: string): void;
 }
 
 interface Entry {
@@ -176,6 +177,7 @@ class TerminalRegistry {
     term.attachCustomKeyEventHandler((e) => handleClipboardKey(term, e, this.copyOnCtrlC));
     term.parser.registerOscHandler(9, (data) => integration.osc9(data));
     term.parser.registerOscHandler(133, (data) => integration.osc133(data));
+    term.parser.registerOscHandler(633, (data) => integration.osc633(data));
     return term;
   }
 

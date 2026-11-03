@@ -14,6 +14,12 @@ const invoke = {
   'elevation:openExternal': 1,
   'pty:isBusy': 1,
   'pty:kill': 1,
+  'pty:killDetached': 1,
+  'session:save': 1,
+  'profiles:pickIcon': 1,
+  'update:status': 1,
+  'update:check': 1,
+  'update:install': 1,
   'config:get': 1,
   'settings:update': 1,
   'settings:openFile': 1,
@@ -75,6 +81,7 @@ const events = {
   'tests:output': 1,
   'tests:finished': 1,
   'plugins:changed': 1,
+  'update:changed': 1,
 } satisfies Record<EventChannel, 1>;
 
 export const invokeChannels: ReadonlySet<string> = new Set(Object.keys(invoke));

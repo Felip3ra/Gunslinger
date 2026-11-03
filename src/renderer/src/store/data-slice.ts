@@ -1,6 +1,7 @@
 import type { StateCreator } from 'zustand';
 import type { ConfigSnapshot, ProjectAnalysis, ShellProfile, StatusInfo, UiState } from '@shared/model';
 import type { PluginsSnapshot } from '@shared/plugins';
+import type { UpdateStatus } from '@shared/update';
 
 /** Dados vindos do main: configuração, perfis, estado da UI, status e análises de projeto. */
 export interface DataSlice {
@@ -12,6 +13,8 @@ export interface DataSlice {
   projectAnalyses: Record<string, ProjectAnalysis>;
   /** Plugins declarativos e as contribuições dos ativos (somente leitura). */
   plugins: PluginsSnapshot | null;
+  /** Atualização automática (null até o main responder). */
+  update: UpdateStatus | null;
   setConfig(config: ConfigSnapshot): void;
   setProfiles(profiles: ShellProfile[]): void;
   setUi(ui: UiState): void;
@@ -25,6 +28,7 @@ export const createDataSlice: StateCreator<DataSlice, [], [], DataSlice> = (set)
   statuses: {},
   projectAnalyses: {},
   plugins: null,
+  update: null,
   setConfig: (config) => set({ config }),
   setProfiles: (profiles) => set({ profiles }),
   setUi: (ui) => set({ ui }),

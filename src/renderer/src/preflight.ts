@@ -12,11 +12,13 @@ const TOOL_LABEL: Record<ToolName, string> = {
   npm: 'npm',
   yarn: 'yarn',
   pnpm: 'pnpm',
+  bun: 'Bun',
 };
 
 const HINTS: Partial<Record<ToolName, string>> = {
   yarn: 'Sugestão: corepack enable  ou  npm install -g yarn',
   pnpm: 'Sugestão: corepack enable  ou  npm install -g pnpm',
+  bun: 'Sugestão: winget install Oven-sh.Bun  ou  npm install -g bun',
 };
 
 /** Comando instalado pelo botão "Instalar" (só roda depois do clique). */

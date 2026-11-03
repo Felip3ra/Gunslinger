@@ -66,12 +66,25 @@ function ProfileEditor({ profile, onClose }: { profile: CustomProfile; onClose: 
           />
         </label>
         <label className="field">
-          <span>Ícone (embutido ou caminho .png/.ico)</span>
-          <input
-            list="builtin-icons"
-            value={draft.icon ?? ''}
-            onChange={(e) => setDraft({ ...draft, icon: e.target.value || null })}
-          />
+          <span>Ícone (embutido ou imagem .png/.ico/.svg)</span>
+          <div className="inline-input">
+            <input
+              list="builtin-icons"
+              aria-label="Ícone"
+              value={draft.icon ?? ''}
+              onChange={(e) => setDraft({ ...draft, icon: e.target.value || null })}
+            />
+            <button
+              type="button"
+              onClick={() =>
+                void api.invoke('profiles:pickIcon').then((path) => {
+                  if (path) setDraft((d) => ({ ...d, icon: path }));
+                })
+              }
+            >
+              Escolher imagem…
+            </button>
+          </div>
           <datalist id="builtin-icons">
             {BUILTIN_ICONS.map((i) => (
               <option key={i} value={`builtin:${i}`} />
@@ -108,7 +121,7 @@ export function Profiles(): JSX.Element {
         {profiles.map((p) => (
           <li key={p.id}>
             <div>
-              <ProfileIcon icon={p.icon} color={p.color} /> <strong>{p.name}</strong>
+              <ProfileIcon icon={p.icon} color={p.color} data={p.iconData} /> <strong>{p.name}</strong>
               <small>
                 {p.executable} {p.args.join(' ')} {p.source === 'plugin' && '· plugin'}{' '}
                 {!p.available && '· indisponível'}

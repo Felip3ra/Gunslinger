@@ -12,10 +12,12 @@ const ICONS: Record<string, JSX.Element> = {
 
 export const BUILTIN_ICONS = Object.keys(ICONS);
 
-export function ProfileIcon({ icon, color, size = 14 }: { icon: string; color: string; size?: number }): JSX.Element {
+/** `data`: imagem do ícone por arquivo, já lida pelo main (o CSP só permite imagens locais via data:). */
+export function ProfileIcon({ icon, color, data, size = 14 }: { icon: string; color: string; data?: string | undefined; size?: number }): JSX.Element {
   const name = icon.startsWith('builtin:') ? icon.slice('builtin:'.length) : null;
+  if (data) return <img className="profile-icon" src={data} width={size} height={size} alt="" />;
   if (!name) {
-    // Ícone de arquivo (.png/.ico) informado pelo usuário: o CSP só permite imagens locais via data:.
+    // Arquivo ausente ou inválido: um bloco da cor do perfil.
     return <span className="profile-icon" style={{ width: size, height: size, background: color, borderRadius: 3 }} />;
   }
   return (

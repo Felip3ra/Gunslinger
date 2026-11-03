@@ -4,7 +4,7 @@ Itens fora do escopo do MVP (`openspec/changes/add-gunslinger-mvp/proposal.md`),
 
 ## Fora do escopo do MVP
 
-Implementados em changes próprias (`openspec/changes/add-*`): divisão de tela, workspaces, perfis de ambiente, `launchSettings.json`, Docker e portas, executor de testes, destaque de logs, histórico de dados (no lugar da sincronização na nuvem) e plugins declarativos.
+Implementados em changes próprias (`openspec/changes/add-*`): divisão de tela, workspaces, perfis de ambiente, `launchSettings.json`, Docker e portas, executor de testes, destaque de logs, histórico de dados (no lugar da sincronização na nuvem), plugins declarativos, atualização automática, ciclo de vida dos processos (Job Objects, fnm por sessão, `WM_SETTINGCHANGE`) e melhorias do dia a dia (última sessão, histórico de comandos, bun, ícones por arquivo).
 
 - **Sincronização entre máquinas** (serviço remoto ou pasta sincronizada); hoje o histórico é só local.
 - **Plugins com código** (APIs de extensão); hoje plugins são só dados.
@@ -12,10 +12,6 @@ Implementados em changes próprias (`openspec/changes/add-*`): divisão de tela,
 
 ## Itens levantados durante a implementação
 
-- Encerrar processos que se desligam da árvore (iniciados com `start`) com Job Objects (`JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE`), via helper nativo.
-- Versão do Node por sessão com fnm: o script de integração pode emitir a versão numa sequência OSC própria.
 - Versões de Node/.NET em pastas internas do WSL (consultar as ferramentas do Linux).
-- Recarregar o ambiente automaticamente ao receber `WM_SETTINGCHANGE`.
-- Suporte a `bun` como quarto gerenciador de pacotes.
-- Assinatura de código e atualização automática (electron-updater).
-- Ícones de perfil por arquivo `.png`/`.ico` (hoje exibidos como um bloco da cor do perfil, por causa do CSP).
+- Assinatura de código (certificado; hoje o SmartScreen avisa no primeiro download).
+- Versão do Node por sessão no CMD (sem hook de prompt) e processos de abas elevadas no rastreamento.

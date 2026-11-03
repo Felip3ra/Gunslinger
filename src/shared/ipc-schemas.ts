@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { InvokeChannel, SendChannel } from './ipc-contract';
-import { customProfileSchema, profileOverrideSchema, projectSchema, savedCommandSchema, workspaceSchema } from './model';
+import { commandHistoryEntrySchema } from './command-history';
+import { customProfileSchema, profileOverrideSchema, projectSchema, savedCommandSchema, workspaceLayoutSchema, workspaceSchema } from './model';
 
 const id = z.string().min(1).max(200);
 const dims = { cols: z.number().int().min(1).max(1000), rows: z.number().int().min(1).max(500) };
@@ -18,6 +19,12 @@ export const invokeSchemas = {
   'pty:restart': z.object({ sessionId: id, ...dims }),
   'pty:isBusy': z.object({ sessionId: id }),
   'pty:kill': z.object({ sessionId: id }),
+  'pty:killDetached': z.object({ token: id }),
+  'session:save': z.object({ tabs: z.array(workspaceLayoutSchema).max(50) }),
+  'profiles:pickIcon': z.undefined(),
+  'update:status': z.undefined(),
+  'update:check': z.undefined(),
+  'update:install': z.undefined(),
   'config:get': z.undefined(),
   'settings:update': z.object({ path: z.array(z.union([z.string(), z.number()])).min(1), value: z.unknown() }),
   'settings:openFile': z.undefined(),
@@ -52,7 +59,7 @@ export const invokeSchemas = {
   'docker:list': z.undefined(),
   'docker:action': z.object({ id: z.string().regex(/^[\w.-]+$/).max(200), action: z.enum(['start', 'stop', 'restart', 'rm']) }),
   'tools:check': z.object({
-    tool: z.enum(['dotnet', 'dotnet-ef', 'node', 'npm', 'yarn', 'pnpm']),
+    tool: z.enum(['dotnet', 'dotnet-ef', 'node', 'npm', 'yarn', 'pnpm', 'bun']),
     cwd: filePath,
   }),
   'env:reload': z.undefined(),
@@ -62,6 +69,7 @@ export const invokeSchemas = {
       sidebar: z.object({ visible: z.boolean(), width: z.number().int().min(160).max(800) }),
       recents: z.array(z.string().max(500)).max(50),
       detectedProfiles: z.array(z.unknown()),
+      commandHistory: z.array(commandHistoryEntrySchema).max(1000),
     })
     .partial(),
   'fs:statMany': z.object({ paths: z.array(filePath).max(500) }),

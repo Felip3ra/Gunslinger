@@ -7,7 +7,7 @@ import { analyzeDotnet } from './dotnet';
 import { analyzePackage } from './node';
 import { scanProject } from './scan';
 
-const WATCHED_FILES = new Set(['package.json', 'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', '.yarnrc.yml']);
+const WATCHED_FILES = new Set(['package.json', 'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', 'bun.lock', 'bun.lockb', '.yarnrc.yml']);
 
 interface Watched {
   root: string;

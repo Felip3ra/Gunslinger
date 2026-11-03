@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { BrowserWindow, session, shell } from 'electron';
+import icon from '../../resources/icon.png?asset';
 
 const isDev = !!process.env['ELECTRON_RENDERER_URL'];
 
@@ -45,6 +46,8 @@ export function createMainWindow(): BrowserWindow {
     show: false,
     backgroundColor: '#0d1117',
     title: 'Gunslinger',
+    // Ícone da janela e da barra de tarefas (no instalado o .exe também o tem; em dev é o único).
+    icon,
     autoHideMenuBar: true,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),

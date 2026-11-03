@@ -19,6 +19,22 @@ export interface SpawnSpec {
   windowsVerbatimArguments?: boolean;
 }
 
+export interface TrackedProcess {
+  pid: number;
+  name: string;
+}
+
+/**
+ * Acompanha todos os processos criados a partir de um processo, inclusive os que saem da árvore
+ * dele (`start`, daemons), que `listDescendants` não alcança depois que o pai termina.
+ */
+export interface ProcessTracker {
+  track(key: string, pid: number): void;
+  /** Processos ainda vivos do grupo; o grupo deixa de ser acompanhado. */
+  release(key: string): Promise<TrackedProcess[]>;
+  dispose(): void;
+}
+
 export interface PlatformAdapter {
   readonly name: 'win32' | 'posix';
   /** Separador da variável PATH. */
@@ -39,4 +55,7 @@ export interface PlatformAdapter {
   listListeningPorts(): Promise<{ address: string; port: number; pid: number; processName: string | null }[]>;
   /** Encerra o processo e os descendentes informados (capturados antes do kill). */
   killTree(pid: number, descendants: number[]): Promise<void>;
+  /** Rastreador de grupos de processos, ou null onde não existe. */
+  createProcessTracker(env: Env): ProcessTracker | null;
+
 }

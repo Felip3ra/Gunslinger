@@ -7,7 +7,9 @@ import { getVar, type Env } from '../env/env-utils';
 import { mergeWindowsEnvironment, parseRegExport } from '../env/windows-registry-env';
 import { detectWindowsShells } from '../shells/detect-windows';
 import { parseNetstat, parseTasklist } from '@shared/ports';
+import { JobTracker } from './job-tracker';
 import type { DetectedShell, PlatformAdapter, SpawnSpec } from './types';
+import { startJobHelper } from './win32-job-helper';
 
 const execFileAsync = promisify(execFile);
 
@@ -162,5 +164,9 @@ export const win32Adapter: PlatformAdapter = {
     await run(['/PID', String(pid), '/T', '/F']);
     // Descendentes podem ter perdido o pai (ex.: node iniciado por npm.cmd) e escapar do /T.
     await Promise.all(descendants.map((d) => run(['/PID', String(d), '/F'])));
+  },
+
+  createProcessTracker(env) {
+    return new JobTracker(() => startJobHelper(env));
   },
 };

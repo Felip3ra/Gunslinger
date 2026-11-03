@@ -131,3 +131,78 @@ describe('PtyManager', () => {
     expect(manager.get(id)?.cwd).toBe('D:\\x');
   });
 });
+
+describe('PtyManager: processos fora da árvore', () => {
+  function withTracker(mode: 'ask' | 'kill' | 'keep') {
+    const killed: number[] = [];
+    const tracked: [string, number][] = [];
+    const base = (manager as unknown as { deps: PtyManagerDeps }).deps;
+    const m = new PtyManager({
+      ...base,
+      // pid 999_999 não existe: o kill não espera sobreviventes.
+      platform: { ...base.platform, killTree: async (pid) => void killed.push(pid) },
+      tracker: {
+        track: (key, pid) => void tracked.push([key, pid]),
+        release: async () => [
+          { pid: 999_999, name: 'cmd' },
+          { pid: 4242, name: 'PING' },
+        ],
+        dispose: () => {},
+      },
+      detachedMode: () => mode,
+    });
+    return { m, killed, tracked };
+  }
+
+  async function kill(m: PtyManager, id: string) {
+    const result = m.kill(id);
+    await vi.advanceTimersByTimeAsync(2000);
+    return result;
+  }
+
+  it('acompanha o shell ao criar e, no modo perguntar, devolve só os processos de fora da árvore', async () => {
+    const { m, killed, tracked } = withTracker('ask');
+    const info = m.create({ profileId: 'builtin.cmd', cols: 80, rows: 24 });
+    expect(tracked).toEqual([[info.id, 999_999]]);
+    const result = await kill(m, info.id);
+    expect(result.detached).toEqual([{ pid: 4242, name: 'PING' }]);
+    expect(killed).not.toContain(4242);
+    await m.killDetached(result.token!);
+    expect(killed).toContain(4242);
+    // O token vale uma vez.
+    killed.length = 0;
+    await m.killDetached(result.token!);
+    expect(killed).toEqual([]);
+  });
+
+  it('no modo encerrar encerra sem perguntar e no modo manter não encerra', async () => {
+    const kill1 = withTracker('kill');
+    const r1 = await kill(kill1.m, kill1.m.create({ profileId: 'builtin.cmd', cols: 80, rows: 24 }).id);
+    expect(r1).toEqual({ token: null, detached: [] });
+    expect(kill1.killed).toContain(4242);
+
+    const keep = withTracker('keep');
+    const r2 = await kill(keep.m, keep.m.create({ profileId: 'builtin.cmd', cols: 80, rows: 24 }).id);
+    expect(r2).toEqual({ token: null, detached: [] });
+    expect(keep.killed).not.toContain(4242);
+  });
+});
+
+describe('PtyManager: saída durante o encerramento', () => {
+  it('a saída do shell provocada pelo kill não consome o grupo de processos', async () => {
+    const releases: string[] = [];
+    const base = (manager as unknown as { deps: PtyManagerDeps }).deps;
+    const m = new PtyManager({
+      ...base,
+      platform: { ...base.platform, killTree: async () => {} },
+      tracker: { track: () => {}, release: async (key) => (releases.push(key), [{ pid: 4242, name: 'PING' }]), dispose: () => {} },
+      detachedMode: () => 'ask',
+    });
+    const info = m.create({ profileId: 'builtin.cmd', cols: 80, rows: 24 });
+    fake.kill.mockImplementation(() => fake.exit(1));
+    const result = m.kill(info.id);
+    await vi.advanceTimersByTimeAsync(2000);
+    expect((await result).detached).toEqual([{ pid: 4242, name: 'PING' }]);
+    expect(releases).toEqual([info.id]);
+  });
+});

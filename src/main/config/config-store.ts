@@ -109,6 +109,7 @@ export class ConfigStore {
   private readonly timers = new Map<string, NodeJS.Timeout>();
   private watcher: FSWatcher | null = null;
   private state: UiState = clone(defaultUiState);
+  private stateWrite: Promise<void> = Promise.resolve();
 
   constructor(
     readonly dir: string,
@@ -372,7 +373,11 @@ export class ConfigStore {
 
   async patchState(patch: Partial<Omit<UiState, 'version'>>): Promise<void> {
     this.state = { ...this.state, ...patch };
-    await writeFileAtomic(join(this.dir, 'state.json'), toJson(this.state));
+    // Gravações em fila: duas ao mesmo tempo disputariam o mesmo state.json.tmp.
+    const text = toJson(this.state);
+    const write = this.stateWrite.then(() => writeFileAtomic(join(this.dir, 'state.json'), text));
+    this.stateWrite = write.catch(() => undefined);
+    await write;
   }
 
   // ---------- observação de mudanças externas ----------

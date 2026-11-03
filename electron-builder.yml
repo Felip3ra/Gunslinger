@@ -6,12 +6,16 @@ directories:
 files:
   - out/**
   - package.json
+  # Ícone da janela (importado com ?asset em src/main/window.ts).
+  - resources/icon.png
 extraResources:
   - from: resources/shell-integration
     to: shell-integration
 # node-pty usa binários N-API pré-compilados; recompilar do zero falha (winpty).
 # windows-process-tree já é recompilado no postinstall.
 npmRebuild: false
+# Grava o ícone no Gunslinger.exe (ver build/after-pack.cjs).
+afterPack: build/after-pack.cjs
 asarUnpack:
   # Executáveis e DLLs precisam existir no disco (OpenConsole.exe, conpty.dll, *.node).
   - node_modules/node-pty/**
@@ -20,9 +24,17 @@ win:
   # Sem certificado de assinatura no MVP. Esta etapa também baixa o winCodeSign, cuja extração
   # exige privilégio de symlink (Modo de Desenvolvedor do Windows).
   signAndEditExecutable: false
+  icon: build/icon.ico
   target:
     - target: nsis
       arch: [x64]
+# Releases do GitHub: o workflow de release publica o instalador e o latest.yml, e a
+# atualização automática (electron-updater) lê o app-update.yml gerado a partir daqui.
+publish:
+  provider: github
+  owner: Felip3ra
+  repo: Gunslinger
+  releaseType: release
 nsis:
   # Nome fixo: o site aponta para releases/latest/download/Gunslinger-Setup.exe.
   artifactName: Gunslinger-Setup.${ext}
