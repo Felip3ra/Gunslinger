@@ -7,9 +7,14 @@ on:
 
 jobs:
   windows:
-    runs-on: windows-latest
+    # windows-2022 + Python 3.11: o node-gyp 9 (do @electron/rebuild) só reconhece o Visual Studio até
+    # o 2022 e não funciona com o Python 3.12+ (sem distutils).
+    runs-on: windows-2022
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
       - uses: actions/setup-node@v4
         with:
           node-version: 20
