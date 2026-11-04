@@ -8,6 +8,7 @@ import { History } from './settings/History';
 import { Plugins } from './settings/Plugins';
 import { Profiles } from './settings/Profiles';
 import { Shortcuts } from './settings/Shortcuts';
+import { SshSettings } from './settings/SshSettings';
 import { TerminalSettings } from './settings/TerminalSettings';
 
 export type SettingsSection =
@@ -16,6 +17,7 @@ export type SettingsSection =
   | 'atalhos'
   | 'perfis'
   | 'ambientes'
+  | 'ssh'
   | 'plugins'
   | 'historico'
   | 'sobre';
@@ -44,6 +46,7 @@ export function SettingsDialog(): JSX.Element | null {
     ['atalhos', 'Atalhos'],
     ['perfis', 'Perfis de shell'],
     ['ambientes', 'Ambientes'],
+    ['ssh', 'SSH e hosts conhecidos'],
     ['plugins', 'Plugins'],
     ['historico', 'Histórico'],
     ['sobre', 'Sobre e atualizações'],
@@ -84,6 +87,7 @@ export function SettingsDialog(): JSX.Element | null {
         {section === 'atalhos' && <Shortcuts />}
         {section === 'perfis' && <Profiles />}
         {section === 'ambientes' && <Environments />}
+        {section === 'ssh' && <SshSettings />}
         {section === 'plugins' && <Plugins />}
         {section === 'historico' && <History />}
         {section === 'sobre' && <About />}

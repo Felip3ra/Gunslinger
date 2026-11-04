@@ -40,6 +40,18 @@ export interface DesktopPort {
   openExternal(url: string): Promise<void>;
 }
 
+/**
+ * Cofre do sistema (DPAPI no Windows): cifra segredos ligados ao usuário do SO.
+ * O texto cifrado só pode ser decifrado pela mesma conta, na mesma máquina.
+ */
+export interface SecretPort {
+  isAvailable(): boolean;
+  /** Texto cifrado em base64. */
+  encrypt(plain: string): string;
+  /** Lança se o texto não puder ser decifrado (outra conta, arquivo corrompido). */
+  decrypt(cipherBase64: string): string;
+}
+
 /** A janela principal, vista pelos serviços. */
 export interface WindowPort {
   isFocused(): boolean;

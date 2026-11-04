@@ -1,10 +1,21 @@
-import { copyFile, mkdir, readFile } from 'node:fs/promises';
+import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { app, ipcMain, type BrowserWindow } from 'electron';
 import { spawn as ptySpawn } from 'node-pty';
 import type { EventMap } from '@shared/ipc-contract';
-import { electronClipboard, electronDesktop, electronDialogs, electronNotifier, electronWindow, onSystemSettingChange } from './adapters/electron';
+import { electronClipboard, electronDesktop, electronDialogs, electronNotifier, electronSecrets, electronWindow, onSystemSettingChange } from './adapters/electron';
+import { registerKeychainHandlers } from './ipc/handlers/keychain';
+import { KeychainService } from './ssh/keychain-service';
+import { readOpenSshKeyInfo } from './ssh/key-codec';
+import { Client as SshClient } from 'ssh2';
+import { registerSshHandlers } from './ipc/handlers/ssh';
+import { SshConnectionPool, targetKey } from './ssh/connection-pool';
+import { HostService } from './ssh/host-service';
+import { PromptBroker } from './ssh/prompt-broker';
+import { SshSessionService } from './ssh/ssh-session-service';
+import { KnownHostsService } from './ssh/known-hosts-service';
+import { SecretStore } from './ssh/secret-store';
 import { electronUpdaterPort } from './adapters/electron-updater';
 import { ConfigStore } from './config/config-store';
 import { ElevationService, SUDO_REGISTRY_KEY } from './elevation/elevation-service';
@@ -155,7 +166,14 @@ export async function compose(getWindow: () => BrowserWindow | null): Promise<Ap
   );
   const transfer = new TransferService({
     dialogs,
-    snapshot: () => config.snapshot(),
+    snapshot: () => ({ ...config.snapshot(), keychain: config.keychainFile() }),
+    writeHosts: (hosts) => config.mutateHosts(() => hosts),
+    writeKeychain: (keychain) => config.mutateKeychain(() => keychain),
+    openSsh: {
+      dir: () => join(defaultCwd(), '.ssh'),
+      localUser: () => getVar(env.current().env, 'USERNAME') ?? 'user',
+      readKeyInfo: (path) => readOpenSshKeyInfo(path, (p) => readFile(p, 'utf8')),
+    },
     knownProfileIds: () => shells.list().map((p) => p.id),
     executableExists: async (p) => (await platform.resolveExecutable(p.executable, env.current().env)) !== null,
     writeProjects: (projects) => config.mutateProjects(() => projects),
@@ -190,6 +208,40 @@ export async function compose(getWindow: () => BrowserWindow | null): Promise<Ap
   });
   registerDesktopHandlers(ipc, { editor, desktop: electronDesktop, clipboard: electronClipboard, notifier, transfer, config });
 
+  const keychain = new KeychainService({
+    config,
+    secrets: new SecretStore(config.dir, electronSecrets),
+    readFile: (p) => readFile(p, 'utf8'),
+    writeFile: (p, text) => writeFile(p, text, { mode: 0o600 }),
+  });
+  await keychain.start();
+  config.onChange(() => send('keychain:changed', keychain.snapshot()));
+  const knownHosts = new KnownHostsService(config);
+  const sshDir = (): string => join(defaultCwd(), '.ssh');
+  registerKeychainHandlers(ipc, { keychain, knownHosts, dialogs, clipboard: electronClipboard, sshDir, readFile: (p) => readFile(p, 'utf8') });
+
+  const prompts = new PromptBroker(
+    (event) => send('ssh:prompt', event),
+    (promptId) => send('ssh:promptClosed', { promptId }),
+  );
+  const sshPool = new SshConnectionPool({
+    createClient: () => new SshClient(),
+    hostsFile: () => config.snapshot().hosts,
+    settings: () => config.snapshot().settings.ssh,
+    keychain,
+    knownHosts,
+    prompts,
+    linkIdentity: (hostId, identityId) => config.mutateHosts((f) => ({ ...f, hosts: f.hosts.map((h) => (h.id === hostId ? { ...h, identityId } : h)) })),
+  });
+  const sshSessions = new SshSessionService({
+    pool: sshPool,
+    pty,
+    send: (state) => send('ssh:state', state),
+    hostsFile: () => config.snapshot().hosts,
+    cancelPrompts: (target) => prompts.cancelGroup(targetKey(target)),
+  });
+  registerSshHandlers(ipc, { hosts: new HostService(config), sessions: sshSessions, prompts, transfer });
+
   const update = new UpdateService({
     updater: electronUpdaterPort(),
     currentVersion: app.getVersion(),
@@ -220,6 +272,8 @@ export async function compose(getWindow: () => BrowserWindow | null): Promise<Ap
       plugins.stop();
       analysis.closeAll();
       status.dispose();
+      prompts.cancelAll();
+      sshPool.closeAll();
     },
   };
 }

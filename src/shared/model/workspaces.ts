@@ -6,6 +6,8 @@ export const workspacePaneSchema = z.object({
   projectId: z.string().nullable().default(null),
   /** Comando inicial (executado só depois da confirmação, ao abrir o workspace). */
   command: z.string().nullable().default(null),
+  /** Painel SSH: conecta ao host (ignora profileId, cwd e projectId). O comando só vai depois de conectar. */
+  hostId: z.string().min(1).nullable().default(null),
 });
 export type WorkspacePane = z.infer<typeof workspacePaneSchema>;
 

@@ -10,10 +10,10 @@ import { openProject } from '../projects';
 import { openWorkspace } from '../workspaces';
 import { runCommand, type RunMode } from '../run-command';
 import { activeTab, useStore, EMPTY } from '../store';
-import { openTab } from '../tabs';
+import { openSshTab, openTab } from '../tabs';
 import { terminals } from '../terminal/terminal-registry';
 
-type Kind = 'Comando' | 'Script' | 'Projeto' | 'Ação' | 'Perfil';
+type Kind = 'Comando' | 'Script' | 'Projeto' | 'Ação' | 'Perfil' | 'Host';
 
 interface PaletteItem extends SearchItem {
   kind: Kind;
@@ -142,6 +142,18 @@ function useItems(): PaletteItem[] {
         shortcut: null,
         disabled: null,
         run: () => void openWorkspace(w),
+      });
+    }
+    for (const h of config.hosts.hosts) {
+      items.push({
+        id: `host:${h.id}`,
+        kind: 'Host',
+        title: `Conectar: ${h.name}`,
+        secondary: [h.username ? `${h.username}@${h.address}` : h.address, ...h.tags].join(' · '),
+        detail: '',
+        shortcut: null,
+        disabled: null,
+        run: () => void openSshTab({ kind: 'host', hostId: h.id }),
       });
     }
     for (const p of config.projects.projects) {

@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Manual do Gunslinger</title>
-  <meta name="description" content="Manual do Gunslinger: abas, atalhos, comandos salvos, projetos .NET e Node, testes, Docker, ambientes, workspaces, cores, plugins e configuração." />
+  <meta name="description" content="Manual do Gunslinger: abas, atalhos, comandos salvos, projetos .NET e Node, testes, Docker, ambientes, workspaces, hosts SSH e keychain, cores, plugins e configuração." />
   <meta property="og:title" content="Manual do Gunslinger" />
   <meta property="og:image" content="https://gunslinger.vercel.app/og-image.png" />
   <meta name="theme-color" content="#0b0f16" />
@@ -40,6 +40,9 @@
       <a href="#docker">Docker e portas</a>
       <a href="#ambientes">Perfis de ambiente</a>
       <a href="#workspaces">Workspaces</a>
+      <a href="#ssh">Hosts SSH</a>
+      <a href="#keychain">Keychain</a>
+      <a href="#hosts-conhecidos">Hosts conhecidos</a>
       <a href="#admin">Administrador</a>
       <a href="#status">Barra de status</a>
       <a href="#sessao">Sessão e processos</a>
@@ -98,7 +101,7 @@ dotnet ef database update {migration} --connection "{conexao}"</code></pre>
       <p>Ao executar, o app pede os valores (com lista de opções e valor padrão, se definidos). <strong>▶</strong> executa, <strong>⤓</strong> só insere no terminal sem Enter. Categorias podem ser renomeadas pelo ✎.</p>
 
       <h2 id="paleta">Paleta de comandos</h2>
-      <p><kbd>Ctrl</kbd>+<kbd>P</kbd> busca em comandos salvos, comandos de projeto, scripts, workspaces, perfis de ambiente e ações do app. A busca ignora acentos e aceita letras fora de ordem (“migra” encontra “Nova migration”). <kbd>Enter</kbd> executa; <kbd>Shift</kbd>+<kbd>Enter</kbd> insere sem executar.</p>
+      <p><kbd>Ctrl</kbd>+<kbd>P</kbd> busca em comandos salvos, comandos de projeto, scripts, workspaces, perfis de ambiente, hosts SSH (“Conectar: Homolog API”) e ações do app. A busca ignora acentos e aceita letras fora de ordem (“migra” encontra “Nova migration”). <kbd>Enter</kbd> executa; <kbd>Shift</kbd>+<kbd>Enter</kbd> insere sem executar.</p>
       <figure class="shot">
         <img src="img/paleta.webp" width="1440" height="900" loading="lazy" alt="Paleta de comandos com a busca migra" />
         <figcaption>Busca “migra”: comandos do EF Core do projeto ativo.</figcaption>
@@ -138,6 +141,40 @@ dotnet ef database update {migration} --connection "{conexao}"</code></pre>
 
       <h2 id="workspaces">Workspaces</h2>
       <p>Monte as abas e painéis do dia e use <strong>Salvar abas como workspace</strong>. <strong>Abrir workspace</strong> recria tudo, com perfis, pastas e projetos. Em <strong>Gerenciar workspaces</strong>, defina um comando inicial por painel (como <code>dotnet watch run</code> ou <code>npm run dev</code>); ao abrir, o app lista os comandos e só executa depois da sua confirmação.</p>
+      <p>Um painel também pode ser um <strong>host SSH</strong> (escolha “SSH: nome do host” no lugar do perfil). Com comando inicial, o painel conecta depois da confirmação e só envia o comando quando a conexão estiver pronta; se a conexão falhar ou for cancelada, o comando não é enviado. Sem comando inicial, o painel abre como “Desconectado”.</p>
+
+      <h2 id="ssh">Hosts SSH</h2>
+      <p>A seção <strong>Hosts</strong> do painel lateral guarda os servidores que você acessa. A conexão é feita pelo próprio app (não depende do <code>ssh.exe</code>) e cada conexão vira uma aba de terminal como as outras: atalhos, painéis, busca, links e copiar/colar funcionam igual.</p>
+      <ul>
+        <li><strong>+</strong> cadastra um host: nome, endereço (nome DNS, IPv4 ou IPv6), porta, usuário, identidade ou chave, host de salto, keepalive, cor e tags.</li>
+        <li><strong>⊞</strong> cria um <strong>grupo</strong>. Grupos podem ficar dentro de grupos e definir porta, usuário, identidade, chave, host de salto, keepalive e encaminhamento do agente. Um campo vazio no host herda do grupo mais próximo, e o formulário mostra de onde vem o valor (“ops (herdado de Produção)”).</li>
+        <li>Para conectar: <kbd>Enter</kbd> ou clique duplo na linha do host, o botão <strong>▶</strong>, ou <strong>Conectar: …</strong> na paleta. <strong>◫</strong> e <strong>⊟</strong> conectam dividindo o painel ativo à direita ou abaixo. Dividir um painel SSH abre outro painel no mesmo servidor.</li>
+        <li><strong>Conexão rápida:</strong> digite <code>usuário@endereço:porta</code> na busca de hosts e escolha <strong>Conectar</strong>, sem cadastrar. <strong>Salvar host</strong> abre o formulário já preenchido.</li>
+        <li>✎ edita, ⧉ duplica (a cópia usa a mesma identidade e chave) e 🗑 exclui. Excluir um host usado como salto avisa quem perde o salto; excluir um grupo com hosts pergunta se eles sobem para o grupo acima ou são excluídos junto.</li>
+      </ul>
+      <p><strong>Ao conectar</strong>, a aba mostra a etapa (conectando, verificando o servidor, autenticando). A autenticação tenta, nesta ordem, a chave configurada, o agente SSH, a senha salva e as perguntas do servidor (keyboard-interactive, inclusive código 2FA). O que faltar é pedido num diálogo; <strong>Salvar no keychain</strong> vem desmarcado e não aparece para códigos 2FA. Várias abas do mesmo host compartilham uma conexão, então a senha e o código são pedidos uma vez só.</p>
+      <p><strong>Host de salto:</strong> defina outro host (ou um grupo) como salto, e o salto pode ter o próprio salto (até 5). Cada salto passa pela verificação do servidor e usa as próprias credenciais. Saltos em ciclo são recusados ao salvar.</p>
+      <p><strong>Queda e reconexão:</strong> se a conexão cair (por exemplo, o servidor parou de responder ao keepalive), a saída fica na tela com “Conexão encerrada” e o motivo. <strong>Reconectar</strong> (ou <kbd>Enter</kbd>) abre uma sessão nova no mesmo painel; o app nunca reconecta sozinho. Se a conexão falhar, a aba mostra a mensagem com <strong>Tentar de novo</strong> e <strong>Editar host</strong>.</p>
+      <p><strong>Importar do OpenSSH:</strong> o <strong>⇩</strong> da seção Hosts (ou <strong>Importar hosts do ~/.ssh/config</strong> na paleta) lê <code>Host</code>, <code>HostName</code>, <code>User</code>, <code>Port</code>, <code>IdentityFile</code>, <code>ProxyJump</code>, <code>ServerAliveInterval</code> e <code>ForwardAgent</code> e mostra a prévia antes de gravar. Os hosts entram no grupo “Importados do OpenSSH”, com os valores de <code>Host *</code> como padrão do grupo; as chaves entram no keychain como referência ao arquivo. O que não for suportado (<code>Match</code>, <code>Include</code>, curingas, outras diretivas) aparece na prévia como “não será importado”.</p>
+
+      <h2 id="keychain">Keychain</h2>
+      <p>O <strong>🔑</strong> da seção Hosts (ou <strong>Keychain</strong> na paleta) guarda chaves e identidades.</p>
+      <ul>
+        <li><strong>Chaves:</strong> importe um arquivo (guardando uma cópia cifrada ou usando o arquivo do disco a cada conexão), cole o texto da chave ou <strong>gere</strong> uma nova (Ed25519, recomendado, ou RSA 4096, com frase-senha opcional). Aceita Ed25519, ECDSA e RSA nos formatos OpenSSH e PEM. Cada chave mostra o tipo e o fingerprint SHA256; <strong>Copiar pública</strong> põe a linha <code>ssh-ed25519 AAAA… nome</code> na área de transferência, pronta para o <code>authorized_keys</code>.</li>
+        <li><strong>Identidades:</strong> um usuário com senha e/ou chave. Hosts e grupos que usam a identidade recebem a troca de senha de uma vez.</li>
+        <li>Excluir uma chave ou identidade em uso lista quem a usa; depois disso, esses hosts passam a herdar do grupo ou a pedir a credencial.</li>
+      </ul>
+      <div class="note"><p>Senhas, frases-senha e chaves guardadas ficam cifradas pelo cofre do Windows (DPAPI), ligadas à sua conta, e nunca aparecem na tela: o formulário mostra só “Senha salva”, com <strong>Substituir</strong> e <strong>Apagar</strong>. Copiados para outra conta ou outro PC, esses segredos aparecem como “indisponível” e a conexão pede a credencial de novo.</p></div>
+      <p>O <strong>agente SSH</strong> é configurado em <strong>Configurações → SSH e hosts conhecidos</strong>: OpenSSH do Windows (serviço <code>ssh-agent</code>, o padrão), Pageant ou nenhum. O encaminhamento do agente fica desligado por padrão e é ligado por host ou por grupo.</p>
+
+      <h2 id="hosts-conhecidos">Hosts conhecidos</h2>
+      <p>Toda conexão, inclusive a dos hosts de salto, confere a chave do servidor antes de enviar qualquer credencial.</p>
+      <ul>
+        <li><strong>Servidor novo:</strong> o app mostra o endereço e o fingerprint SHA256 e oferece <strong>Confiar e conectar</strong> (grava a chave), <strong>Conectar só desta vez</strong> ou <strong>Cancelar</strong>.</li>
+        <li><strong>Chave alterada:</strong> a conexão é bloqueada com um aviso e os fingerprints antigo e novo. Só continua por <strong>Substituir a chave gravada…</strong>, que pede uma segunda confirmação. Faça isso só se souber por que a chave mudou (por exemplo, o servidor foi reinstalado).</li>
+        <li><strong>Chave revogada</strong> (<code>@revoked</code> no <code>known_hosts</code> importado): bloqueia sem opção de continuar.</li>
+      </ul>
+      <p>Em <strong>Configurações → SSH e hosts conhecidos</strong> ficam a lista (com busca e exclusão), o agente, o keepalive padrão (30 s; 0 desliga) e o tempo limite de conexão (20 s). <strong>Importar ~/.ssh/known_hosts</strong> traz as chaves que o OpenSSH já conhece, inclusive as com nome em hash.</p>
 
       <h2 id="admin">Abas como administrador</h2>
       <p>No menu ▾, o botão <strong>🛡 Admin</strong> ao lado de PowerShell, CMD e Git Bash abre o shell elevado (também na paleta). A confirmação é sempre o UAC do Windows.</p>
@@ -148,12 +185,14 @@ dotnet ef database update {migration} --connection "{conexao}"</code></pre>
 
       <h2 id="status">Barra de status</h2>
       <p>Mostra o shell, o projeto, a pasta atual, a branch do Git (com ● quando há alterações) e as versões do Node e do .NET <em>da pasta atual</em> (respeitando o <code>global.json</code> e os shims do Volta). Com o <code>fnm</code> por sessão, o PowerShell e o Bash informam a versão do Node da aba. Quando um instalador ou o <code>setx</code> muda as variáveis de ambiente, o app recarrega o ambiente sozinho; para mudanças que não avisam o Windows, use <strong>Recarregar ambiente</strong> na paleta. Abas abertas mostram “ambiente desatualizado”, com a opção de reiniciar.</p>
+      <p>Numa aba SSH, a barra mostra <code>usuário@endereço:porta</code> e se a conexão está ativa, no lugar de projeto, pasta, Git e versões (que são da sua máquina, não do servidor).</p>
 
       <h2 id="sessao">Sessão, histórico de comandos e processos</h2>
       <ul>
-        <li><strong>Última sessão:</strong> ao abrir, o app reabre as abas e painéis que estavam abertos (sem executar nenhum comando).</li>
+        <li><strong>Última sessão:</strong> ao abrir, o app reabre as abas e painéis que estavam abertos (sem executar nenhum comando). Abas SSH voltam como “Desconectado”, com <strong>Conectar</strong>, e não conectam sozinhas; se o host tiver sido excluído, mostram “Host não encontrado”. Conexões rápidas não são reabertas.</li>
         <li><strong>Histórico de comandos:</strong> <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>H</kbd> busca nos comandos digitados em todas as abas. Enter escreve o comando no terminal; <kbd>Ctrl</kbd>+Enter executa. Comandos começados por espaço não são guardados.</li>
         <li><strong>Processos que saem da aba:</strong> ao fechar uma aba, os processos que ela iniciou e continuam rodando fora dela (<code>start</code>, servidores em segundo plano) são listados com <strong>Encerrar</strong> ou <strong>Manter rodando</strong>.</li>
+        <li><strong>Abas SSH</strong> não entram na pergunta de “comandos rodando” ao fechar: o app não sabe o que roda no servidor. Fechar a aba encerra a sessão remota.</li>
       </ul>
       <p>Tudo isso se ajusta em <strong>Configurações → Terminal e editor</strong>. As configurações também abrem pela engrenagem à direita das abas.</p>
 
@@ -195,7 +234,7 @@ dotnet ef database update {migration} --connection "{conexao}"</code></pre>
       <p>Em <strong>Configurações → Plugins</strong> ficam a lista, os erros de validação, ativar/desativar, abrir a pasta e recarregar.</p>
 
       <h2 id="historico">Histórico de dados</h2>
-      <p>A cada mudança em configurações, comandos, projetos ou workspaces (pela interface ou editando os arquivos), o app guarda uma versão local. Em <strong>Configurações → Histórico</strong> você cria pontos de restauração com nome, restaura qualquer versão (o estado atual fica salvo como “Antes de restaurar”) e exclui versões. Ficam as 50 automáticas mais recentes.</p>
+      <p>A cada mudança em configurações, comandos, projetos, workspaces ou hosts (pela interface ou editando os arquivos), o app guarda uma versão local. O keychain e os hosts conhecidos ficam de fora, para que restaurar uma versão antiga não traga de volta como confiável uma chave de servidor que você substituiu. Em <strong>Configurações → Histórico</strong> você cria pontos de restauração com nome, restaura qualquer versão (o estado atual fica salvo como “Antes de restaurar”) e exclui versões. Ficam as 50 automáticas mais recentes.</p>
 
       <h2 id="configuracao">Configuração</h2>
       <p>Os arquivos ficam em <code>%APPDATA%\Gunslinger</code>:</p>
@@ -206,10 +245,15 @@ dotnet ef database update {migration} --connection "{conexao}"</code></pre>
           <tr><td><code>commands.json</code></td><td>comandos salvos</td></tr>
           <tr><td><code>projects.json</code></td><td>projetos</td></tr>
           <tr><td><code>workspaces.json</code></td><td>workspaces</td></tr>
+          <tr><td><code>hosts.json</code></td><td>hosts e grupos SSH</td></tr>
+          <tr><td><code>keychain.json</code></td><td>chaves e identidades (só nomes, tipos e fingerprints; nenhum segredo)</td></tr>
+          <tr><td><code>secrets.json</code></td><td>senhas, frases-senha e chaves guardadas, cifradas pelo cofre do Windows</td></tr>
+          <tr><td><code>known_hosts.json</code></td><td>chaves dos servidores em que você confia</td></tr>
           <tr><td><code>history/</code>, <code>plugins/</code></td><td>histórico de dados e plugins</td></tr>
         </tbody>
       </table>
-      <p>Mudanças feitas direto nos arquivos são aplicadas sem reiniciar. Se um arquivo ficar inválido, o app abre com os valores padrão, mostra a linha do erro e não grava nada nele até você corrigir (a versão anterior fica em <code>&lt;arquivo&gt;.bak</code>). <strong>Importar/Exportar</strong> (paleta) troca comandos, perfis e projetos com outras pessoas, com prévia e resolução de conflitos.</p>
+      <p>Mudanças feitas direto nos arquivos são aplicadas sem reiniciar. Se um arquivo ficar inválido, o app abre com os valores padrão, mostra a linha do erro e não grava nada nele até você corrigir (a versão anterior fica em <code>&lt;arquivo&gt;.bak</code>). <strong>Importar/Exportar</strong> (paleta) troca comandos, perfis, projetos e hosts SSH com outras pessoas, com prévia e resolução de conflitos.</p>
+      <div class="note"><p>Ao exportar hosts, vão junto os grupos, os hosts de salto e as identidades, mas <strong>nunca</strong> senhas, frases-senha ou chaves guardadas no keychain. Chaves que apontam para um arquivo vão como referência ao caminho. Quem importa vê na prévia o que chega sem chave ou sem senha.</p></div>
 
       <h2 id="limitacoes">Limitações conhecidas</h2>
       <ul>
@@ -219,6 +263,8 @@ dotnet ef database update {migration} --connection "{conexao}"</code></pre>
         <li>Serviços do Windows e processos de abas como administrador não entram na pergunta ao fechar a aba.</li>
         <li>O instalador não é assinado: no primeiro download o SmartScreen avisa (“Mais informações → Executar assim mesmo”).</li>
         <li>As notificações do Windows dependem do atalho criado pelo instalador.</li>
+        <li><strong>Abas SSH:</strong> não há integração com o shell do servidor, então a pasta atual e o comando em execução não são rastreados. Comandos salvos executados com uma aba SSH ativa abrem uma aba local.</li>
+        <li><strong>SSH:</strong> algoritmos considerados fracos (assinatura <code>ssh-rsa</code> com SHA-1, cifras CBC, <code>diffie-hellman-group1-sha1</code>) não são oferecidos; servidores muito antigos que só tenham esses mostram “Nenhum algoritmo em comum com o servidor”. Certificados SSH, chaves FIDO (<code>sk-*</code>) e Kerberos ainda não são suportados.</li>
       </ul>
     </article>
   </div>

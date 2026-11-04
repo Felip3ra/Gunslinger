@@ -7,6 +7,7 @@ import { api } from '../api';
 import { runCommand } from '../run-command';
 import { confirmDialog, useStore, EMPTY } from '../store';
 import { matchesFilter } from '@shared/text';
+import { HostsSection } from './HostsSection';
 
 export function newCommand(partial: Partial<SavedCommand> = {}): SavedCommand {
   return {
@@ -209,6 +210,7 @@ export function Sidebar({ projectSection }: { projectSection?: ReactNode }): JSX
         </button>
       </div>
       {projectSection}
+      <HostsSection />
       {groups.length === 0 && (
         <p className="empty">{filter ? 'Nenhum comando encontrado.' : 'Nenhum comando salvo ainda.'}</p>
       )}

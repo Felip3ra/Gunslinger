@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { DEFAULT_PALETTE, PALETTE_MAX } from '../colors';
 import { environmentProfileSchema } from '../env-profiles';
 import { defaultLogHighlight, logHighlightSchema } from '../log-highlight';
+import { defaultSshSettings, sshSettingsSchema } from './hosts';
 import { customProfileSchema, hexColor, profileOverrideSchema } from './profiles';
 
 export const themeSchema = z.object({
@@ -92,6 +93,9 @@ export const actionIds = [
   'plugins.open',
   'commandHistory.search',
   'update.check',
+  'hosts.new',
+  'keychain.open',
+  'hosts.importOpenSsh',
 ] as const;
 export type ActionId = (typeof actionIds)[number];
 
@@ -122,6 +126,9 @@ export const defaultKeybindings: Record<ActionId, string | null> = {
   'plugins.open': null,
   'commandHistory.search': 'Ctrl+Shift+H',
   'update.check': null,
+  'hosts.new': null,
+  'keychain.open': null,
+  'hosts.importOpenSsh': null,
 };
 
 export const settingsSchema = z.object({
@@ -167,6 +174,7 @@ export const settingsSchema = z.object({
     overrides: z.record(z.string(), profileOverrideSchema),
     custom: z.array(customProfileSchema),
   }),
+  ssh: sshSettingsSchema,
 });
 export type Settings = z.infer<typeof settingsSchema>;
 
@@ -192,4 +200,5 @@ export const defaultSettings: Settings = {
   environments: [],
   plugins: { disabled: [] },
   profiles: { overrides: {}, custom: [] },
+  ssh: defaultSshSettings,
 };

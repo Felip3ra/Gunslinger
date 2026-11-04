@@ -1,5 +1,5 @@
-import { clipboard, dialog, Notification, shell, type BrowserWindow } from 'electron';
-import type { ClipboardPort, DesktopPort, DialogPort, NotifierPort, WindowPort } from '../ports';
+import { clipboard, dialog, Notification, safeStorage, shell, type BrowserWindow } from 'electron';
+import type { ClipboardPort, DesktopPort, DialogPort, NotifierPort, SecretPort, WindowPort } from '../ports';
 import { openExternalSafe } from '../window';
 
 /** Adaptadores Electron das portas. Único lugar (com window.ts/index.ts/composition.ts) que importa o Electron. */
@@ -47,6 +47,13 @@ export const electronClipboard: ClipboardPort = {
 export const electronDesktop: DesktopPort = {
   openPath: (path) => shell.openPath(path),
   openExternal: (url) => openExternalSafe(url),
+};
+
+/** safeStorage: DPAPI no Windows (só disponível depois do evento `ready` do app). */
+export const electronSecrets: SecretPort = {
+  isAvailable: () => safeStorage.isEncryptionAvailable(),
+  encrypt: (plain) => safeStorage.encryptString(plain).toString('base64'),
+  decrypt: (cipher) => safeStorage.decryptString(Buffer.from(cipher, 'base64')),
 };
 
 const WM_SETTINGCHANGE = 0x001a;

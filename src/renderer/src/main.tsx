@@ -11,6 +11,7 @@ import { wireProjectEvents } from './projects';
 import { wireTestEvents } from './tests';
 import { restoreSessionOrOpenTab, wireSessionSaving } from './session';
 import { wirePtyEvents } from './tabs';
+import { wireSshEvents } from './ssh';
 import { terminals } from './terminal/terminal-registry';
 import { applyUiColors } from './ui-colors';
 
@@ -50,15 +51,18 @@ import { applyUiColors } from './ui-colors';
 };
 
 async function bootstrap(): Promise<void> {
-  const [config, profiles, ui, plugins, update] = await Promise.all([
+  const [config, profiles, ui, plugins, update, keychain] = await Promise.all([
     api.invoke('config:get'),
     api.invoke('profiles:list'),
     api.invoke('state:get'),
     api.invoke('plugins:get'),
     api.invoke('update:status'),
+    api.invoke('keychain:get'),
   ]);
   const store = useStore.getState();
   store.setConfig(config);
+  useStore.setState({ keychain });
+  wireSshEvents();
   applyUiColors(config.settings.appearance.ui);
   useStore.setState({ plugins, update });
   api.on('update:changed', (status) => useStore.setState({ update: status }));

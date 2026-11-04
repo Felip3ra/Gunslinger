@@ -27,6 +27,31 @@ describe('ConfigStore', () => {
     expect(JSON.parse(await readFile(join(dir, 'Gunslinger', 'commands.json'), 'utf8'))).toEqual({ version: 1, commands: [] });
   });
 
+  it('keychain e known hosts ficam fora do snapshot do renderer', async () => {
+    const store = new ConfigStore(dir);
+    await store.load();
+    await store.mutateKeychain((f) => ({
+      ...f,
+      identities: [{ id: 'i1', name: 'deploy', username: 'deploy', passwordSecretId: 'segredo-1' }],
+    }));
+    const snap = store.snapshot();
+    expect(JSON.stringify(snap)).not.toContain('segredo-1');
+    expect(snap.hosts).toEqual({ version: 1, groups: [], hosts: [] });
+    expect(store.keychainFile().identities[0]?.passwordSecretId).toBe('segredo-1');
+  });
+
+  it('keychain.json inválido não é sobrescrito e bloqueia gravações', async () => {
+    const broken = '{ "version": 1, "keys": [ { "id": 1 } ], "identities": [] }';
+    await writeFile(join(dir, 'keychain.json'), broken);
+    const store = new ConfigStore(dir);
+    const snap = await store.load();
+    expect(snap.readOnly.keychain).toBe(true);
+    expect(snap.issues.some((i) => i.file === 'keychain')).toBe(true);
+    const r = await store.mutateKeychain((f) => f);
+    expect(r.ok).toBe(false);
+    expect(await read('keychain.json')).toBe(broken);
+  });
+
   it('JSON quebrado: usa os padrões, informa a linha e não altera o arquivo', async () => {
     const broken = '{\n  "version": 1,\n  "defaultProfile": "builtin.cmd",\n}\n';
     await writeFile(join(dir, 'settings.json'), broken);
@@ -152,7 +177,8 @@ describe('ConfigStore: histórico', () => {
   it('fileTexts devolve os textos e null com arquivo inválido', async () => {
     const store = new ConfigStore(dir);
     await store.load();
-    expect(Object.keys(store.fileTexts()!).sort()).toEqual(['commands', 'projects', 'settings', 'workspaces']);
+    // keychain e known hosts ficam fora do histórico.
+    expect(Object.keys(store.fileTexts()!).sort()).toEqual(['commands', 'hosts', 'projects', 'settings', 'workspaces']);
     await writeFile(join(dir, 'projects.json'), '{ quebrado');
     const broken = new ConfigStore(dir);
     await broken.load();

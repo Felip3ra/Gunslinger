@@ -59,6 +59,32 @@ const invoke = {
   'transfer:export': 1,
   'transfer:previewImport': 1,
   'transfer:applyImport': 1,
+  'keychain:get': 1,
+  'keychain:pickKeyFile': 1,
+  'keychain:importKey': 1,
+  'keychain:generateKey': 1,
+  'keychain:renameKey': 1,
+  'keychain:setKeyPassphrase': 1,
+  'keychain:saveIdentity': 1,
+  'keychain:usage': 1,
+  'keychain:delete': 1,
+  'keychain:copyPublicKey': 1,
+  'keychain:exportKey': 1,
+  'knownHosts:list': 1,
+  'knownHosts:delete': 1,
+  'knownHosts:importOpenSsh': 1,
+  'hosts:save': 1,
+  'hosts:duplicate': 1,
+  'hosts:delete': 1,
+  'hosts:jumpUsers': 1,
+  'hosts:saveGroup': 1,
+  'hosts:groupContents': 1,
+  'hosts:deleteGroup': 1,
+  'transfer:previewOpenSsh': 1,
+  'ssh:connect': 1,
+  'ssh:reconnect': 1,
+  'ssh:answer': 1,
+  'ssh:state': 1,
 } satisfies Record<InvokeChannel, 1>;
 
 const send = {
@@ -82,6 +108,10 @@ const events = {
   'tests:finished': 1,
   'plugins:changed': 1,
   'update:changed': 1,
+  'keychain:changed': 1,
+  'ssh:prompt': 1,
+  'ssh:promptClosed': 1,
+  'ssh:state': 1,
 } satisfies Record<EventChannel, 1>;
 
 export const invokeChannels: ReadonlySet<string> = new Set(Object.keys(invoke));

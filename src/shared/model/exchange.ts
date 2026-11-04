@@ -1,9 +1,10 @@
 import type { CommandsFile } from './commands';
+import type { HostsFile } from './hosts';
 import type { PackageManager, ProjectsFile } from './projects';
 import type { Settings } from './settings';
 import type { WorkspacesFile } from './workspaces';
 
-export type ConfigFileName = 'settings' | 'commands' | 'projects' | 'workspaces';
+export type ConfigFileName = 'settings' | 'commands' | 'projects' | 'workspaces' | 'hosts' | 'keychain' | 'knownHosts';
 
 export interface ConfigIssue {
   file: ConfigFileName;
@@ -20,6 +21,8 @@ export interface ConfigSnapshot {
   commands: CommandsFile;
   projects: ProjectsFile;
   workspaces: WorkspacesFile;
+  hosts: HostsFile;
+  /** Inclui os problemas de keychain.json e known_hosts.json, que não vêm no snapshot. */
   issues: ConfigIssue[];
   /** Arquivos com erro: a UI não pode gravá-los até o usuário corrigir. */
   readOnly: Record<ConfigFileName, boolean>;

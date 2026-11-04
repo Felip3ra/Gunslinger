@@ -1,11 +1,25 @@
 import { z } from 'zod';
 import type { InvokeChannel, SendChannel } from './ipc-contract';
 import { commandHistoryEntrySchema } from './command-history';
-import { customProfileSchema, profileOverrideSchema, projectSchema, savedCommandSchema, workspaceLayoutSchema, workspaceSchema } from './model';
+import {
+  customProfileSchema,
+  hostAddressSchema,
+  hostGroupSchema,
+  hostSchema,
+  portSchema,
+  profileOverrideSchema,
+  projectSchema,
+  savedCommandSchema,
+  workspaceLayoutSchema,
+  workspaceSchema,
+} from './model';
 
 const id = z.string().min(1).max(200);
 const dims = { cols: z.number().int().min(1).max(1000), rows: z.number().int().min(1).max(500) };
 const filePath = z.string().min(1).max(4096);
+const name = z.string().trim().min(1).max(120);
+/** Senha ou frase-senha: só trafega do renderer para o main, nunca de volta. */
+const secret = z.string().min(1).max(4096);
 
 /** Schemas das requisições invoke; o main valida antes de executar o handler. */
 export const invokeSchemas = {
@@ -92,12 +106,77 @@ export const invokeSchemas = {
     categories: z.union([z.literal('all'), z.array(z.string())]),
     profileIds: z.array(id),
     projectIds: z.array(id),
+    hostIds: z.array(id).optional(),
   }),
   'transfer:previewImport': z.undefined(),
   'transfer:applyImport': z.object({
     previewId: id,
     decisions: z.array(z.object({ key: z.string(), action: z.enum(['replace', 'keepBoth', 'skip']) })),
   }),
+  'keychain:get': z.undefined(),
+  'keychain:pickKeyFile': z.undefined(),
+  'keychain:importKey': z.object({
+    name,
+    source: z.discriminatedUnion('kind', [
+      z.object({ kind: z.literal('file'), path: filePath, mode: z.enum(['copy', 'reference']) }),
+      z.object({ kind: z.literal('text'), text: z.string().min(1).max(64 * 1024) }),
+    ]),
+    passphrase: secret.optional(),
+    savePassphrase: z.boolean(),
+  }),
+  'keychain:generateKey': z.object({
+    name,
+    type: z.enum(['ed25519', 'rsa']),
+    comment: z.string().max(256).optional(),
+    passphrase: secret.optional(),
+    savePassphrase: z.boolean(),
+  }),
+  'keychain:renameKey': z.object({ keyId: id, name }),
+  'keychain:setKeyPassphrase': z.object({ keyId: id, passphrase: secret.nullable() }),
+  'keychain:saveIdentity': z.object({
+    id: id.optional(),
+    name,
+    username: z.string().trim().min(1).max(256),
+    keyId: id.nullable(),
+    password: z.discriminatedUnion('action', [
+      z.object({ action: z.literal('keep') }),
+      z.object({ action: z.literal('set'), value: secret }),
+      z.object({ action: z.literal('clear') }),
+    ]),
+  }),
+  'keychain:usage': z.object({ kind: z.enum(['key', 'identity']), id }),
+  'keychain:delete': z.object({ kind: z.enum(['key', 'identity']), id }),
+  'keychain:copyPublicKey': z.object({ keyId: id }),
+  'keychain:exportKey': z.object({ keyId: id, which: z.enum(['private', 'public']) }),
+  'knownHosts:list': z.undefined(),
+  'knownHosts:delete': z.object({ index: z.number().int().min(0) }),
+  'knownHosts:importOpenSsh': z.undefined(),
+  'hosts:save': hostSchema,
+  'hosts:duplicate': z.object({ hostId: id }),
+  'hosts:delete': z.object({ hostId: id }),
+  'hosts:jumpUsers': z.object({ hostId: id }),
+  'hosts:saveGroup': hostGroupSchema,
+  'hosts:groupContents': z.object({ groupId: id }),
+  'hosts:deleteGroup': z.object({ groupId: id, contents: z.enum(['moveUp', 'deleteHosts']) }),
+  'transfer:previewOpenSsh': z.undefined(),
+  'ssh:connect': z.object({
+    target: z.discriminatedUnion('kind', [
+      z.object({ kind: z.literal('host'), hostId: id }),
+      z.object({ kind: z.literal('quick'), username: z.string().trim().min(1).max(256).nullable(), address: hostAddressSchema, port: portSchema }),
+    ]),
+    ...dims,
+  }),
+  'ssh:reconnect': z.object({ sessionId: id, ...dims }),
+  'ssh:answer': z.object({
+    promptId: id,
+    answer: z.discriminatedUnion('kind', [
+      z.object({ kind: z.literal('hostKey'), decision: z.enum(['trust', 'once', 'replace', 'cancel']) }),
+      z.object({ kind: z.literal('text'), value: z.string().max(4096), save: z.boolean() }),
+      z.object({ kind: z.literal('responses'), values: z.array(z.string().max(4096)).max(20), save: z.boolean() }),
+      z.object({ kind: z.literal('cancel') }),
+    ]),
+  }),
+  'ssh:state': z.object({ sessionId: id }),
 } satisfies Record<InvokeChannel, z.ZodTypeAny>;
 
 export const sendSchemas = {

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { workspaceSchema, type Workspace, type WorkspacePane } from './model';
 import { buildKeyTree, captureLayout, commandsOf, type KeyTree } from './workspaces';
 
-const pane = (cwd: string, command: string | null = null): WorkspacePane => ({ profileId: 'builtin.cmd', cwd, projectId: null, command });
+const pane = (cwd: string, command: string | null = null): WorkspacePane => ({ profileId: 'builtin.cmd', cwd, projectId: null, command, hostId: null });
 
 describe('workspaces', () => {
   const tree: KeyTree = { type: 'split', direction: 'row', sizes: [0.7, 0.3], children: [{ type: 'pane', key: 'a' }, { type: 'pane', key: 'b' }] };

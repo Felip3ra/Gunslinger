@@ -1,6 +1,6 @@
 # Gunslinger
 
-Terminal desktop para Windows 10/11 feito para quem trabalha com .NET e Node.js: abas com PowerShell, CMD, Git Bash e WSL, comandos salvos com variáveis, comandos prontos de EF Core (`dotnet ef`) e dos scripts do `package.json`, e uma barra de status com branch do Git e versões do Node e do .NET.
+Terminal desktop para Windows 10/11 feito para quem trabalha com .NET e Node.js: abas com PowerShell, CMD, Git Bash, WSL e servidores SSH (hosts, keychain e verificação de fingerprint), comandos salvos com variáveis, comandos prontos de EF Core (`dotnet ef`) e dos scripts do `package.json`, e uma barra de status com branch do Git e versões do Node e do .NET.
 
 ## Instalação
 
@@ -13,7 +13,7 @@ npm install
 npm run dist        # instalador em dist/
 ```
 
-Requisitos de desenvolvimento: Node.js 20+, npm e, para recompilar `@vscode/windows-process-tree`, o Visual Studio Build Tools com C++. O `node-pty` usa binários pré-compilados.
+Requisitos de desenvolvimento: Node.js 20+, npm e, para recompilar `@vscode/windows-process-tree` no `postinstall`, o Python 3 e o Visual Studio Build Tools com C++. O `node-pty` usa binários pré-compilados, e o cliente SSH (`ssh2`) é JavaScript puro: o módulo nativo opcional `cpu-features` dele não é compilado nem empacotado.
 
 ## Uso rápido
 
@@ -67,6 +67,24 @@ Erros (vermelho), avisos (amarelo) e sucesso (verde) são destacados na saída: 
 
 Monte as abas e painéis do dia (por exemplo API + front + shell livre) e use **Salvar abas como workspace** na paleta. Depois, **Abrir workspace: <nome>** recria tudo, com perfis, pastas e projetos. Em **Gerenciar workspaces**, defina um comando inicial por painel (como `dotnet watch run` ou `npm run dev`); ao abrir, o app lista os comandos e só os executa depois da sua confirmação. Os workspaces ficam em `%APPDATA%\Gunslinger\workspaces.json`.
 
+Um painel de workspace também pode ser um host SSH ("SSH: <host>" no lugar do perfil): com comando inicial, ele conecta depois da confirmação e só envia o comando quando a conexão estiver pronta; sem comando, abre como "Desconectado".
+
+## Hosts SSH
+
+A seção **Hosts** do painel lateral guarda os servidores. A conexão é feita pelo próprio app (biblioteca `ssh2`, sem depender do `ssh.exe`), e cada conexão é uma aba de terminal como as outras.
+
+- **Hosts e grupos:** **+** cadastra um host (nome, endereço DNS/IPv4/IPv6, porta, usuário, identidade ou chave, host de salto, keepalive, cor e tags); **⊞** cria um grupo. Grupos podem ficar dentro de grupos, e cada campo vazio do host herda do grupo mais próximo que o define (o formulário mostra a origem: "ops (herdado de Produção)").
+- **Conectar:** Enter ou clique duplo na linha, **▶**, ou **Conectar: <host>** na paleta. **◫**/**⊟** conectam dividindo o painel ativo. Dividir um painel SSH abre outro painel no mesmo servidor.
+- **Conexão rápida:** digite `usuário@endereço:porta` na busca de hosts. **Salvar host** cadastra depois.
+- **Autenticação:** chave configurada → agente SSH → senha salva → perguntas do servidor (keyboard-interactive, inclusive 2FA). O que faltar é pedido num diálogo; "Salvar no keychain" vem desmarcado e não aparece para códigos 2FA. Abas do mesmo host compartilham a conexão, então senha e código são pedidos uma vez.
+- **Host de salto (ProxyJump):** até 5 saltos, cada um verificado e autenticado com as próprias credenciais; ciclos são recusados ao salvar.
+- **Queda:** a aba mantém a saída e mostra "Conexão encerrada" com o motivo; **Reconectar** (ou Enter) abre uma sessão nova no mesmo painel. O app nunca reconecta sozinho.
+- **Importar do OpenSSH:** **⇩** na seção Hosts lê o `~/.ssh/config` (`Host`, `HostName`, `User`, `Port`, `IdentityFile`, `ProxyJump`, `ServerAliveInterval`, `ForwardAgent`) e mostra a prévia; `Host *` vira padrão do grupo "Importados do OpenSSH" e o que não é suportado aparece como ignorado.
+
+**Keychain** (🔑 na seção Hosts): chaves Ed25519, ECDSA e RSA (OpenSSH ou PEM) importadas como cópia cifrada, como referência ao arquivo ou coladas, ou **geradas** no app (Ed25519 ou RSA 4096, com frase-senha opcional), com **Copiar pública** e exportação; e **identidades** (usuário + senha e/ou chave) compartilhadas entre hosts. Senhas, frases-senha e chaves guardadas ficam cifradas pelo cofre do Windows (DPAPI) em `secrets.json` e nunca chegam à interface: o formulário mostra só "Senha salva", com Substituir e Apagar. Excluir uma chave ou identidade em uso lista quem a usa.
+
+**Hosts conhecidos:** toda conexão, inclusive de saltos, confere a chave do servidor antes de enviar credenciais. Servidor novo mostra o fingerprint SHA256 com **Confiar e conectar**, **Conectar só desta vez** ou **Cancelar**; chave alterada bloqueia com os dois fingerprints e só segue por **Substituir a chave gravada…** (com segunda confirmação); chave `@revoked` bloqueia sem opção. Em **Configurações > SSH e hosts conhecidos** ficam a lista, a importação do `~/.ssh/known_hosts`, o agente (OpenSSH do Windows, Pageant ou nenhum), o keepalive padrão (30 s) e o tempo limite de conexão (20 s).
+
 ## Abas como administrador
 
 No menu ▾ de nova aba, o botão **🛡 Admin** ao lado de PowerShell, CMD e Git Bash abre o shell elevado (também na paleta: "Nova aba como administrador"). A confirmação é sempre o UAC do Windows.
@@ -118,6 +136,10 @@ Os arquivos ficam em `%APPDATA%\Gunslinger`:
 | `commands.json` | comandos salvos |
 | `projects.json` | perfis de projeto |
 | `workspaces.json` | workspaces |
+| `hosts.json` | hosts e grupos SSH |
+| `keychain.json` | chaves e identidades (só metadados, nenhum segredo) |
+| `secrets.json` | senhas, frases-senha e chaves guardadas, cifradas pelo cofre do Windows (não editar) |
+| `known_hosts.json` | chaves dos servidores confiáveis |
 | `history/` | snapshots do histórico de dados |
 | `state.json` | estado interno (painel, recentes, cache de detecção), não editar |
 
@@ -125,7 +147,7 @@ Mudanças feitas direto nos arquivos são aplicadas sem reiniciar. Se um arquivo
 
 ### Histórico de dados
 
-A cada mudança em configurações, comandos, projetos ou workspaces (pela interface ou editando os arquivos), o Gunslinger guarda uma versão em `history/`, sem repetir estados iguais. Em **Configurações > Histórico** (ou **Histórico de dados** na paleta) dá para criar um ponto de restauração com nome, restaurar qualquer versão (o estado atual fica salvo como "Antes de restaurar") e excluir versões. Ficam as 50 versões automáticas mais recentes; pontos com nome só saem se você excluir. O histórico é local: nada é enviado para fora da máquina.
+A cada mudança em configurações, comandos, projetos, workspaces ou hosts (pela interface ou editando os arquivos), o Gunslinger guarda uma versão em `history/`, sem repetir estados iguais. O keychain e os hosts conhecidos ficam de fora: restaurar uma versão antiga não deve trazer de volta como confiável uma chave de servidor que você substituiu. Em **Configurações > Histórico** (ou **Histórico de dados** na paleta) dá para criar um ponto de restauração com nome, restaurar qualquer versão (o estado atual fica salvo como "Antes de restaurar") e excluir versões. Ficam as 50 versões automáticas mais recentes; pontos com nome só saem se você excluir. O histórico é local: nada é enviado para fora da máquina.
 
 Editor padrão: VS Code (`code -g {file}:{line}:{column}`). Para outro editor:
 
@@ -140,7 +162,7 @@ Editor padrão: VS Code (`code -g {file}:{line}:{column}`). Para outro editor:
 - Projetos (botão ◆ no painel) podem ser .NET, Node.js ou os dois. Para .NET, o app sugere `--project` e `--startup-project` e oferece os comandos de migrations; para Node, lista os scripts de cada `package.json` (inclusive em subpastas) usando o gerenciador detectado pelo campo `packageManager` ou pelo arquivo de lock (npm, yarn, pnpm ou bun).
 - Perfis customizados aceitam um ícone embutido ou uma imagem `.png`, `.ico` ou `.svg` (até 256 KB), escolhida em **Escolher imagem…**.
 - Projetos .NET com `Properties/launchSettings.json` ganham o grupo **Perfis de execução**: cada perfil do tipo Project vira `dotnet run` e `dotnet watch run` com `--launch-profile` (URLs e variáveis na descrição).
-- **Importar/Exportar** (paleta) troca comandos, perfis customizados e projetos em JSON, com prévia e resolução de conflitos.
+- **Importar/Exportar** (paleta) troca comandos, perfis customizados, projetos e hosts SSH em JSON, com prévia e resolução de conflitos. Hosts levam junto grupos, saltos e identidades, mas nunca senhas, frases-senha nem chaves guardadas no keychain (chaves por arquivo vão como referência ao caminho).
 
 ## Integração com o shell
 
@@ -160,7 +182,7 @@ Com o `fnm` por sessão (`fnm env --use-on-cd`), o PowerShell e o Bash informam 
 
 ## Sessão, histórico de comandos e processos
 
-- **Última sessão:** ao abrir, o app reabre as abas e painéis que estavam abertos (perfil, pasta e projeto; nenhum comando é executado). Desligue em **Configurações > Terminal e editor**.
+- **Última sessão:** ao abrir, o app reabre as abas e painéis que estavam abertos (perfil, pasta e projeto; nenhum comando é executado). Abas SSH voltam como "Desconectado" e só conectam quando você pedir; conexões rápidas não são reabertas. Desligue em **Configurações > Terminal e editor**.
 - **Histórico de comandos:** **Ctrl+Shift+H** busca nos comandos digitados em todas as abas. Enter escreve o comando no terminal ativo sem executar; Ctrl+Enter executa. Ficam os 500 mais recentes, sem repetição, no `state.json`. Comandos começados por espaço não são guardados; dá para desligar e limpar o histórico em **Configurações > Terminal e editor**.
 - **Processos que saem da aba:** cada aba acompanha tudo o que o shell iniciou, inclusive processos que saem da árvore dela (`start`, servidores em segundo plano). Ao fechar a aba ou o app, os que continuam rodando são listados com **Encerrar** ou **Manter rodando**. A opção **Ao fechar uma aba…** troca para encerrar sempre ou manter sempre. Sair com `exit` mantém os processos.
 
@@ -179,6 +201,8 @@ Para publicar uma versão: `npm version 0.2.0` e `git push --follow-tags`. O wor
 - **Serviços e abas elevadas:** serviços do Windows não são filhos do shell, e o Gunslinger não acompanha os processos de abas como administrador; esses não entram na pergunta ao fechar a aba.
 - **Assinatura:** o instalador não é assinado; o SmartScreen avisa no primeiro download ("Mais informações > Executar assim mesmo").
 - Notificações do Windows dependem do atalho no Menu Iniciar criado pelo instalador; rodando via `npm run dev`, podem não aparecer.
+- **Abas SSH:** sem integração com o shell do servidor, a pasta atual e o comando em execução não são rastreados (a aba não entra na pergunta de "comandos rodando" ao fechar). Comandos salvos executados com uma aba SSH ativa abrem uma aba local.
+- **Algoritmos SSH:** assinatura `ssh-rsa` (SHA-1), cifras CBC e `diffie-hellman-group1-sha1` não são oferecidos; servidores que só tenham esses mostram "Nenhum algoritmo em comum com o servidor". Certificados SSH, chaves FIDO (`sk-*`) e Kerberos não são suportados.
 
 ## Desenvolvimento
 

@@ -19,6 +19,8 @@ export class PortService {
     const owners = new Map<number, string>();
     await Promise.all(
       this.sessions().map(async (s) => {
+        // Sessões SSH não têm processo local.
+        if (s.pid === null) return;
         owners.set(s.pid, s.id);
         for (const pid of await this.platform.listDescendants(s.pid).catch(() => [] as number[])) owners.set(pid, s.id);
       }),

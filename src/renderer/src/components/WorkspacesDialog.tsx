@@ -66,6 +66,7 @@ function SaveForm(): JSX.Element {
 function Editor({ initial }: { initial: Workspace }): JSX.Element {
   const [draft, setDraft] = useState(initial);
   const profiles = useStore((s) => s.profiles);
+  const hosts = useStore((s) => s.config?.hosts.hosts ?? EMPTY);
   return (
     <form
       className="modal wide"
@@ -109,8 +110,13 @@ function Editor({ initial }: { initial: Workspace }): JSX.Element {
               <div key={p} className="workspace-pane" data-testid="workspace-pane">
                 <select
                   aria-label={`Perfil do painel ${t + 1}.${p + 1}`}
-                  value={pane.profileId ?? ''}
-                  onChange={(e) => set({ profileId: e.target.value || null })}
+                  value={pane.hostId ? `host:${pane.hostId}` : (pane.profileId ?? '')}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    // Painel SSH: o host define tudo; perfil, pasta e projeto não se aplicam.
+                    if (v.startsWith('host:')) set({ hostId: v.slice(5), profileId: null, cwd: null, projectId: null });
+                    else set({ profileId: v || null, hostId: null });
+                  }}
                 >
                   <option value="">Perfil padrão</option>
                   {profiles.map((pr) => (
@@ -118,10 +124,21 @@ function Editor({ initial }: { initial: Workspace }): JSX.Element {
                       {pr.name}
                     </option>
                   ))}
+                  {hosts.length > 0 && (
+                    <optgroup label="Hosts SSH">
+                      {hosts.map((h) => (
+                        <option key={h.id} value={`host:${h.id}`}>
+                          SSH: {h.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                  {pane.hostId && !hosts.some((h) => h.id === pane.hostId) && <option value={`host:${pane.hostId}`}>SSH: host não encontrado</option>}
                 </select>
                 <input
                   aria-label={`Pasta do painel ${t + 1}.${p + 1}`}
-                  placeholder="Pasta"
+                  placeholder={pane.hostId ? 'Pasta (não se aplica a SSH)' : 'Pasta'}
+                  disabled={!!pane.hostId}
                   value={pane.cwd ?? ''}
                   onChange={(e) => set({ cwd: e.target.value || null })}
                 />
@@ -143,7 +160,7 @@ function Editor({ initial }: { initial: Workspace }): JSX.Element {
             ...draft,
             tabs: [
               ...draft.tabs,
-              { type: 'pane', pane: { profileId: null, cwd: null, projectId: null, command: null } },
+              { type: 'pane', pane: { profileId: null, cwd: null, projectId: null, command: null, hostId: null } },
             ],
           })
         }

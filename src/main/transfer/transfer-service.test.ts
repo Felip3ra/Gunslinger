@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { defaultSettings } from '@shared/model';
+import { defaultHostsFile, defaultKeychainFile, defaultSettings } from '@shared/model';
 import type { DataSnapshot } from '@shared/transfer-logic';
 import type { DialogPort } from '../ports';
 import { TransferService, type TransferDeps } from './transfer-service';
@@ -7,7 +7,7 @@ import { TransferService, type TransferDeps } from './transfer-service';
 function setup(fileContent: string | null) {
   const files = new Map<string, string>();
   if (fileContent !== null) files.set('C:\\in.json', fileContent);
-  let data: DataSnapshot = { commands: { version: 1, commands: [] }, projects: { version: 1, projects: [] }, settings: defaultSettings };
+  let data: DataSnapshot = { commands: { version: 1, commands: [] }, projects: { version: 1, projects: [] }, settings: defaultSettings, hosts: defaultHostsFile, keychain: defaultKeychainFile };
   const dialogs: DialogPort = {
     saveFile: async () => 'C:\\out.json',
     openFile: async () => (fileContent === null ? null : 'C:\\in.json'),
@@ -22,6 +22,8 @@ function setup(fileContent: string | null) {
     writeProjects: async (projects) => ((data = { ...data, projects }), { ok: true }),
     writeCommands: async (commands) => ((data = { ...data, commands }), { ok: true }),
     writeCustomProfiles: async () => ({ ok: true }),
+    writeHosts: async (hosts) => ((data = { ...data, hosts }), { ok: true }),
+    writeKeychain: async (keychain) => ((data = { ...data, keychain }), { ok: true }),
     readFile: async (p) => files.get(p) ?? '',
     writeFile: async (p, c) => void files.set(p, c),
   };

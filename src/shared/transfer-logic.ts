@@ -1,10 +1,14 @@
-import type { CommandsFile, CustomProfile, Project, ProjectsFile, SavedCommand, Settings } from './model';
+import type { CommandsFile, CustomProfile, HostsFile, KeychainFile, Project, ProjectsFile, SavedCommand, Settings } from './model';
+import { applyHostImport, exportHosts, previewHostItems } from './transfer-hosts';
 import { EXPORT_FORMAT, type ConflictAction, type ConflictDecision, type ExportFile, type ExportSelection, type ImportItem, type ImportResult } from './transfer';
 
 export interface DataSnapshot {
   commands: CommandsFile;
   projects: ProjectsFile;
   settings: Settings;
+  hosts: HostsFile;
+  /** Metadados do keychain (os ids de segredo nunca vão para o arquivo exportado). */
+  keychain: KeychainFile;
 }
 
 export function buildExport(data: DataSnapshot, selection: ExportSelection, now = new Date()): ExportFile {
@@ -16,6 +20,7 @@ export function buildExport(data: DataSnapshot, selection: ExportSelection, now 
     // Perfis detectados e preferências (tema, fonte, atalhos) não são exportados.
     profiles: data.settings.profiles.custom.filter((p) => selection.profileIds.includes(p.id)),
     projects: data.projects.projects.filter((p) => selection.projectIds.includes(p.id)),
+    ...exportHosts(data, selection.hostIds ?? []),
   };
 }
 
@@ -76,6 +81,7 @@ export function previewItems(data: DataSnapshot, file: ExportFile, ctx: ImportCo
       notes: ['A pasta raiz pode não existir nesta máquina.'],
     });
   }
+  items.push(...previewHostItems(data, file));
   return items;
 }
 
@@ -90,6 +96,8 @@ export interface ImportApplication {
   commands: CommandsFile;
   projects: ProjectsFile;
   customProfiles: CustomProfile[];
+  hosts: HostsFile;
+  keychain: KeychainFile;
   result: ImportResult;
 }
 
@@ -153,10 +161,17 @@ export function applyImport(data: DataSnapshot, file: ExportFile, decisions: Con
     }
   }
 
+  const remote = applyHostImport(data, file, decisions, newId);
   return {
     commands: { ...data.commands, commands },
     projects: { ...data.projects, projects },
     customProfiles: profiles,
-    result,
+    hosts: remote.hosts,
+    keychain: remote.keychain,
+    result: {
+      added: result.added + remote.result.added,
+      replaced: result.replaced + remote.result.replaced,
+      skipped: result.skipped + remote.result.skipped,
+    },
   };
 }

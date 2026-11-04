@@ -17,6 +17,9 @@ import { DockerPortsPanel } from './components/DockerPortsPanel';
 import { TransferDialogs } from './components/TransferDialogs';
 import { VariablesDialog } from './components/VariablesDialog';
 import { WorkspacesDialog } from './components/WorkspacesDialog';
+import { HostDialog, HostGroupDialog } from './components/HostDialog';
+import { KeychainDialog } from './components/KeychainDialog';
+import { SshPromptDialog } from './components/SshPromptDialog';
 
 export function App(): JSX.Element {
   const sidebarVisible = useStore((s) => s.ui?.sidebar.visible);
@@ -43,7 +46,11 @@ export function App(): JSX.Element {
       <TestsPanel />
       <DockerPortsPanel />
       <VariablesDialog />
+      <HostDialog />
+      <HostGroupDialog />
+      <KeychainDialog />
       <DialogHost />
+      <SshPromptDialog />
     </div>
   );
 }

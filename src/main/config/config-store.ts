@@ -13,6 +13,15 @@ import {
   defaultSettings,
   defaultUiState,
   defaultWorkspacesFile,
+  defaultHostsFile,
+  defaultKeychainFile,
+  defaultKnownHostsFile,
+  hostsFileSchema,
+  keychainFileSchema,
+  knownHostsFileSchema,
+  type HostsFile,
+  type KeychainFile,
+  type KnownHostsFile,
   workspacesFileSchema,
   type WorkspacesFile,
   projectsFileSchema,
@@ -41,6 +50,11 @@ interface FileDef {
   fileName: string;
   schema: ZodTypeAny;
   defaults: unknown;
+  /**
+   * Fora do histórico de configuração: restaurar uma versão antiga do keychain apontaria para segredos
+   * apagados, e a de known hosts traria de volta como confiável uma chave que o usuário substituiu.
+   */
+  noHistory?: boolean;
 }
 
 const FILES: Record<ConfigFileName, FileDef> = {
@@ -48,6 +62,10 @@ const FILES: Record<ConfigFileName, FileDef> = {
   commands: { name: 'commands', fileName: 'commands.json', schema: commandsFileSchema, defaults: defaultCommandsFile },
   projects: { name: 'projects', fileName: 'projects.json', schema: projectsFileSchema, defaults: defaultProjectsFile },
   workspaces: { name: 'workspaces', fileName: 'workspaces.json', schema: workspacesFileSchema, defaults: defaultWorkspacesFile },
+  hosts: { name: 'hosts', fileName: 'hosts.json', schema: hostsFileSchema, defaults: defaultHostsFile },
+  // Keychain e known hosts: validados e gravados aqui, mas fora do snapshot do renderer (têm ids de segredo).
+  keychain: { name: 'keychain', fileName: 'keychain.json', schema: keychainFileSchema, defaults: defaultKeychainFile, noHistory: true },
+  knownHosts: { name: 'knownHosts', fileName: 'known_hosts.json', schema: knownHostsFileSchema, defaults: defaultKnownHostsFile, noHistory: true },
 };
 
 interface FileState {
@@ -129,15 +147,21 @@ export class ConfigStore {
       commands: clone(get('commands').value as CommandsFile),
       projects: clone(get('projects').value as ProjectsFile),
       workspaces: clone(get('workspaces').value as WorkspacesFile),
-      issues: [...get('settings').issues, ...get('commands').issues, ...get('projects').issues, ...get('workspaces').issues],
-      readOnly: {
-        settings: get('settings').readOnly,
-        commands: get('commands').readOnly,
-        projects: get('projects').readOnly,
-        workspaces: get('workspaces').readOnly,
-      },
+      hosts: clone(get('hosts').value as HostsFile),
+      issues: Object.values(FILES).flatMap((def) => get(def.name).issues),
+      readOnly: Object.fromEntries(Object.values(FILES).map((def) => [def.name, get(def.name).readOnly])) as Record<ConfigFileName, boolean>,
       dataDir: this.dir,
     };
+  }
+
+  /** Metadados do keychain (com ids de segredo): só para o processo principal. */
+  keychainFile(): KeychainFile {
+    return clone(this.files.get('keychain')!.value as KeychainFile);
+  }
+
+  /** Hosts conhecidos: só para o processo principal (o renderer recebe a visão com fingerprint). */
+  knownHostsFile(): KnownHostsFile {
+    return clone(this.files.get('knownHosts')!.value as KnownHostsFile);
   }
 
   onChange(listener: (snapshot: ConfigSnapshot) => void): () => void {
@@ -310,6 +334,18 @@ export class ConfigStore {
     return this.mutateJson('workspaces', workspacesFileSchema, fn);
   }
 
+  async mutateHosts(fn: (file: HostsFile) => HostsFile): Promise<SaveResult> {
+    return this.mutateJson('hosts', hostsFileSchema, fn);
+  }
+
+  async mutateKeychain(fn: (file: KeychainFile) => KeychainFile): Promise<SaveResult> {
+    return this.mutateJson('keychain', keychainFileSchema, fn);
+  }
+
+  async mutateKnownHosts(fn: (file: KnownHostsFile) => KnownHostsFile): Promise<SaveResult> {
+    return this.mutateJson('knownHosts', knownHostsFileSchema, fn);
+  }
+
   private async mutateJson<T>(name: ConfigFileName, schema: ZodTypeAny, fn: (file: T) => T): Promise<SaveResult> {
     const blocked = this.blocked(name);
     if (blocked) return blocked;
@@ -336,7 +372,7 @@ export class ConfigStore {
   /** Textos atuais dos arquivos válidos; null se algum estiver inválido (o snapshot ficaria parcial). */
   fileTexts(): Partial<Record<ConfigFileName, string>> | null {
     const texts: Partial<Record<ConfigFileName, string>> = {};
-    for (const def of Object.values(FILES)) {
+    for (const def of Object.values(FILES).filter((d) => !d.noHistory)) {
       const file = this.files.get(def.name)!;
       if (file.readOnly) return null;
       texts[def.name] = file.text ?? toJson(file.value);
@@ -352,7 +388,7 @@ export class ConfigStore {
     const parsed: [ConfigFileName, string, FileState][] = [];
     for (const [name, text] of Object.entries(texts) as [ConfigFileName, string][]) {
       const def = FILES[name];
-      if (!def) continue;
+      if (!def || def.noHistory) continue;
       const next = await this.parseFile(def, text);
       if (next.readOnly) {
         return { ok: false, error: `${def.fileName} do snapshot é inválido: ${next.issues.map((i) => i.message).join('; ')}` };

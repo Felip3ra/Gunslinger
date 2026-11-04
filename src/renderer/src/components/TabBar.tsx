@@ -68,6 +68,8 @@ export function TabBar(): JSX.Element {
   const profiles = useStore((s) => s.profiles);
   const statuses = useStore((s) => s.statuses);
   const environments = useStore((s) => s.config?.settings.environments ?? EMPTY);
+  const hostList = useStore((s) => s.config?.hosts.hosts ?? EMPTY);
+  const hostsById = useMemo(() => new Map(hostList.map((h) => [h.id, h])), [hostList]);
   const activate = useStore((s) => s.activate);
   const [menuOpen, setMenuOpen] = useState(false);
   const settingsShortcut = useStore((s) => s.config?.settings.keybindings['settings.open'] ?? null);
@@ -79,7 +81,9 @@ export function TabBar(): JSX.Element {
         const tab = tabs.find((t) => t.key === displayPane(group));
         if (!tab) return null;
         const selected = !!activeKey && panes.includes(activeKey);
-        const profile = profiles.find((p) => p.id === tab.profileId);
+        const profile = tab.kind === 'ssh' ? undefined : profiles.find((p) => p.id === tab.profileId);
+        const host = tab.sshTarget?.kind === 'host' ? hostsById.get(tab.sshTarget.hostId) : undefined;
+        const accent = tab.kind === 'ssh' ? (host?.color ?? 'var(--accent)') : (profile?.color ?? 'var(--accent)');
         const env = tab.envProfileId ? environments.find((e) => e.id === tab.envProfileId) : undefined;
         const dirty = tab.sessionId ? statuses[tab.sessionId]?.git?.dirty : false;
         return (
@@ -88,7 +92,7 @@ export function TabBar(): JSX.Element {
             role="tab"
             aria-selected={selected}
             className={`tab ${selected ? 'active' : ''}`}
-            style={{ ['--tab-accent' as string]: profile?.color ?? 'var(--accent)' }}
+            style={{ ['--tab-accent' as string]: accent }}
             data-testid="tab"
             onMouseDown={(e) => {
               if (e.button === 1) {
@@ -100,13 +104,15 @@ export function TabBar(): JSX.Element {
             title={tab.cwd ?? undefined}
           >
             {profile && <ProfileIcon icon={profile.icon} color={profile.color} data={profile.iconData} />}
+            {tab.kind === 'ssh' && <span className="host-dot" style={{ background: accent }} title="SSH" data-testid="tab-ssh" />}
             {tab.elevated && (
               <span className="tab-shield" title="Administrador" data-testid="tab-shield">
                 🛡
               </span>
             )}
             {env && <span className="env-dot" style={{ background: env.color }} title={`Ambiente: ${env.name}`} data-testid="tab-env" />}
-            <span className="tab-title">{tab.shellTitle ?? profileName(tab)}</span>
+            {/* SSH: o nome do host (o shell remoto costuma trocar o título por usuário@máquina). */}
+            <span className="tab-title">{tab.kind === 'ssh' ? profileName(tab) : (tab.shellTitle ?? profileName(tab))}</span>
             {panes.length > 1 && (
               <span className="tab-panes" title={`${panes.length} painéis`} data-testid="tab-panes">
                 ▦{panes.length}

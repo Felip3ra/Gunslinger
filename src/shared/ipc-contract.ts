@@ -13,7 +13,15 @@ import type {
   UiState,
   NodePackage,
   Workspace,
+  KeychainResult,
+  KeychainSnapshot,
+  KeychainUsage,
+  KnownHostView,
+  SecretChange,
+  Host,
+  HostGroup,
 } from './model';
+import type { SshAnswer, SshPromptEvent, SshSessionState, SshTarget } from './ssh';
 import type { ElevationInfo } from './elevation';
 import type { TestRunResult, TestTarget } from './test-results';
 import type { DockerAction, DockerListResult } from './docker';
@@ -104,6 +112,50 @@ export interface InvokeMap {
   'transfer:export': { req: ExportSelection; res: { path: string } | null };
   'transfer:previewImport': { req: void; res: ImportPreview | { error: string } | null };
   'transfer:applyImport': { req: { previewId: string; decisions: ConflictDecision[] }; res: ImportResult };
+  /** Keychain: só metadados e o estado dos segredos (nunca o segredo nem o id dele). */
+  'keychain:get': { req: void; res: KeychainSnapshot };
+  /** Escolhe um arquivo de chave privada (diálogo do sistema); null se cancelado. */
+  'keychain:pickKeyFile': { req: void; res: string | null };
+  'keychain:importKey': {
+    req: { name: string; source: { kind: 'file'; path: string; mode: 'copy' | 'reference' } | { kind: 'text'; text: string }; passphrase?: string; savePassphrase: boolean };
+    res: KeychainResult<{ keyId: string }>;
+  };
+  'keychain:generateKey': {
+    req: { name: string; type: 'ed25519' | 'rsa'; comment?: string; passphrase?: string; savePassphrase: boolean };
+    res: KeychainResult<{ keyId: string }>;
+  };
+  'keychain:renameKey': { req: { keyId: string; name: string }; res: SaveResult };
+  'keychain:setKeyPassphrase': { req: { keyId: string; passphrase: string | null }; res: SaveResult };
+  'keychain:saveIdentity': {
+    req: { id?: string; name: string; username: string; keyId: string | null; password: SecretChange };
+    res: KeychainResult<{ identityId: string }>;
+  };
+  'keychain:usage': { req: { kind: 'key' | 'identity'; id: string }; res: KeychainUsage };
+  'keychain:delete': { req: { kind: 'key' | 'identity'; id: string }; res: SaveResult };
+  'keychain:copyPublicKey': { req: { keyId: string }; res: SaveResult };
+  /** Grava a chave num arquivo escolhido no diálogo; null se cancelado. */
+  'keychain:exportKey': { req: { keyId: string; which: 'private' | 'public' }; res: SaveResult | null };
+  'knownHosts:list': { req: void; res: KnownHostView[] };
+  'knownHosts:delete': { req: { index: number }; res: SaveResult };
+  /** Importa o ~/.ssh/known_hosts do usuário. */
+  'knownHosts:importOpenSsh': { req: void; res: { ok: true; added: number; ignored: number } | { ok: false; error: string } };
+  /** Hosts e grupos (a lista vem no snapshot da configuração, em `hosts`). */
+  'hosts:save': { req: Host; res: SaveResult & { hostId?: string } };
+  'hosts:duplicate': { req: { hostId: string }; res: SaveResult & { hostId?: string } };
+  'hosts:delete': { req: { hostId: string }; res: SaveResult };
+  /** Hosts e grupos que usam o host como salto (para avisar antes de excluir). */
+  'hosts:jumpUsers': { req: { hostId: string }; res: string[] };
+  'hosts:saveGroup': { req: HostGroup; res: SaveResult & { groupId?: string } };
+  'hosts:groupContents': { req: { groupId: string }; res: { hosts: number; groups: number } };
+  'hosts:deleteGroup': { req: { groupId: string; contents: 'moveUp' | 'deleteHosts' }; res: SaveResult };
+  /** Prévia da importação do ~/.ssh/config (aplicada com transfer:applyImport). */
+  'transfer:previewOpenSsh': { req: void; res: ImportPreview | { error: string } };
+  /** Abre uma aba SSH: a sessão existe na hora; as etapas chegam por `ssh:state` e os dados por `pty:data`. */
+  'ssh:connect': { req: { target: SshTarget; cols: number; rows: number }; res: { sessionId: string; label: string } };
+  'ssh:reconnect': { req: { sessionId: string; cols: number; rows: number }; res: { sessionId: string; label: string } };
+  /** Resposta a um `ssh:prompt`; false se a pergunta já não existe (respondida, expirada ou cancelada). */
+  'ssh:answer': { req: { promptId: string; answer: SshAnswer }; res: boolean };
+  'ssh:state': { req: { sessionId: string }; res: SshSessionState | null };
 }
 
 /** Fire-and-forget renderer → main (baixa latência). */
@@ -135,6 +187,11 @@ export interface EventMap {
   'plugins:changed': PluginsSnapshot;
   'update:changed': UpdateStatus;
   'tests:finished': { runId: string; result: TestRunResult | null; error: string | null; cancelled: boolean };
+  'keychain:changed': KeychainSnapshot;
+  'ssh:prompt': SshPromptEvent;
+  /** A pergunta foi respondida, expirou ou foi cancelada pelo main: o diálogo fecha. */
+  'ssh:promptClosed': { promptId: string };
+  'ssh:state': SshSessionState;
 }
 
 export type InvokeChannel = keyof InvokeMap;

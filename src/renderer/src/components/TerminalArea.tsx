@@ -1,10 +1,73 @@
 import { useEffect, useRef } from 'react';
 import { containsPane, resizeSplit, type LayoutNode } from '../layout/layout';
-import { useStore, type Tab, type TabGroup } from '../store';
-import { closeTab, restartTab } from '../tabs';
+import { stageText } from '../ssh';
+import { hostOf, useStore, type Tab, type TabGroup } from '../store';
+import { closeTab, connectSsh, restartTab } from '../tabs';
 import { terminals } from '../terminal/terminal-registry';
 
+/** Estados da aba SSH: progresso da conexão, falha, queda e "Desconectado". */
+function SshOverlay({ tab }: { tab: Tab }): JSX.Element | null {
+  const state = useStore((s) => (tab.sessionId ? s.sshStates[tab.sessionId] : undefined));
+  const host = useStore((s) => hostOf(s, tab));
+  const label = tab.sshLabel ?? 'servidor';
+  const editHost = host ? <button onClick={() => useStore.setState({ hostDialog: host })}>Editar host</button> : null;
+
+  if ((tab.status === 'starting' || tab.status === 'running') && state?.stage !== 'connected') {
+    return (
+      <div className="ssh-progress" data-testid="ssh-progress" role="status">
+        <span className="spinner" aria-hidden /> {stageText(state, label)}
+      </div>
+    );
+  }
+  if (tab.status === 'disconnected') {
+    return (
+      <div className="tab-overlay" data-testid="ssh-disconnected">
+        <p>Desconectado de {label}</p>
+        <div className="overlay-actions">
+          <button className="primary" autoFocus onClick={() => void connectSsh(tab.key)}>
+            Conectar
+          </button>
+          <button onClick={() => void closeTab(tab.key)}>Fechar</button>
+        </div>
+      </div>
+    );
+  }
+  if (tab.status === 'error') {
+    return (
+      <div className="tab-overlay error" data-testid="ssh-error">
+        <p>{tab.error}</p>
+        <div className="overlay-actions">
+          {tab.error !== 'Host não encontrado' && (
+            <button className="primary" onClick={() => void restartTab(tab.key)}>
+              Tentar de novo
+            </button>
+          )}
+          {editHost}
+          <button onClick={() => void closeTab(tab.key)}>Fechar</button>
+        </div>
+      </div>
+    );
+  }
+  if (tab.status === 'exited') {
+    const reason = tab.error;
+    return (
+      <div className="tab-overlay ssh-closed" data-testid="ssh-closed">
+        <p>Conexão encerrada{reason ? `: ${reason}` : ''}</p>
+        <small>Enter também reconecta.</small>
+        <div className="overlay-actions">
+          <button className="primary" onClick={() => void restartTab(tab.key)}>
+            Reconectar
+          </button>
+          <button onClick={() => void closeTab(tab.key)}>Fechar</button>
+        </div>
+      </div>
+    );
+  }
+  return null;
+}
+
 function TabOverlay({ tab }: { tab: Tab }): JSX.Element | null {
+  if (tab.kind === 'ssh') return <SshOverlay tab={tab} />;
   if (tab.status === 'exited') {
     return (
       <div className="tab-overlay" data-testid="tab-exited">

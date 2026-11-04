@@ -3,6 +3,7 @@ import { rememberCommand } from './command-history';
 import { nextPane, panesOf, type SplitDirection } from './layout/layout';
 import { api } from './api';
 import type { DetachedProcess } from '@shared/ipc-contract';
+import type { SshTarget } from '@shared/ssh';
 import { askDialog, confirmDialog, groupOf, profileOf, useStore, type Tab, type TabGroup } from './store';
 import { terminals, type CommandEvent } from './terminal/terminal-registry';
 
@@ -10,6 +11,8 @@ let tabCounter = 0;
 const ELEVATION_CANCEL_WINDOW_MS = 3000;
 /** Saída que chegou antes de o renderer saber de qual aba é a sessão. */
 const earlyData = new Map<string, string[]>();
+/** Fim de sessão que chegou antes de o renderer saber de qual aba ela é (conexão SSH recusada na hora). */
+const earlyExit = new Map<string, number>();
 const nextFrame = (): Promise<void> => new Promise((r) => requestAnimationFrame(() => r()));
 
 function tabBySession(sessionId: string): Tab | undefined {
@@ -40,6 +43,18 @@ function onCommandEnd(key: string, event: CommandEvent): void {
   }
 }
 
+/** Liga a sessão à aba e entrega o que chegou antes (saída e, em SSH, o fim da sessão). */
+function adoptSession(key: string, sessionId: string): void {
+  terminals.setSession(key, sessionId);
+  for (const chunk of earlyData.get(sessionId) ?? []) terminals.write(key, chunk);
+  earlyData.delete(sessionId);
+  const exit = earlyExit.get(sessionId);
+  if (exit !== undefined) {
+    earlyExit.delete(sessionId);
+    handleExit(sessionId, exit);
+  }
+}
+
 async function startSession(key: string, profileId: string, cwd?: string, projectId?: string | null, elevated = false, envProfileId?: string | null): Promise<void> {
   const store = useStore.getState();
   await nextFrame();
@@ -54,10 +69,8 @@ async function startSession(key: string, profileId: string, cwd?: string, projec
       ...(elevated ? { elevated } : {}),
       ...(envProfileId ? { envProfileId } : {}),
     });
-    terminals.setSession(key, res.sessionId);
     store.updateTab(key, { sessionId: res.sessionId, status: 'running', cwd: res.cwd, envGeneration: res.envGeneration, error: null, startedAt: Date.now() });
-    for (const chunk of earlyData.get(res.sessionId) ?? []) terminals.write(key, chunk);
-    earlyData.delete(res.sessionId);
+    adoptSession(key, res.sessionId);
   } catch (err) {
     store.updateTab(key, { status: 'error', error: err instanceof Error ? err.message : String(err) });
   }
@@ -118,7 +131,10 @@ export async function openTab(options: OpenTabOptions = {}): Promise<string | nu
   store.addTab({
     key,
     sessionId: null,
+    kind: 'local',
     profileId,
+    sshTarget: null,
+    sshLabel: null,
     projectId: options.projectId ?? null,
     shellTitle: null,
     cwd: options.cwd ?? null,
@@ -211,6 +227,17 @@ async function askDetached(token: string, detached: DetachedProcess[]): Promise<
 export async function restartTab(key: string): Promise<void> {
   const tab = useStore.getState().tabs.find((t) => t.key === key);
   if (!tab) return;
+  if (tab.kind === 'ssh') {
+    // "Reconectar"/"Tentar de novo": sessão nova para o mesmo destino.
+    if (tab.sessionId) {
+      const old = tab.sessionId;
+      useStore.getState().updateTab(key, { sessionId: null });
+      await api.invoke('pty:kill', { sessionId: old }).catch(() => undefined);
+    }
+    await connectSsh(key);
+    terminals.focus(key);
+    return;
+  }
   if (tab.sessionId && tab.status === 'running') {
     // Aba viva (ambiente desatualizado): o main encerra e recria a sessão.
     const old = tab.sessionId;
@@ -219,10 +246,8 @@ export async function restartTab(key: string): Promise<void> {
     const dims = terminals.dimensions(key);
     try {
       const res = await api.invoke('pty:restart', { sessionId: old, cols: dims.cols, rows: dims.rows });
-      terminals.setSession(key, res.sessionId);
       useStore.getState().updateTab(key, { sessionId: res.sessionId, status: 'running', envGeneration: res.envGeneration });
-      for (const chunk of earlyData.get(res.sessionId) ?? []) terminals.write(key, chunk);
-      earlyData.delete(res.sessionId);
+      adoptSession(key, res.sessionId);
     } catch (err) {
       useStore.getState().updateTab(key, { status: 'error', error: String(err) });
     }
@@ -255,6 +280,11 @@ export async function splitActive(direction: SplitDirection): Promise<void> {
   const s = useStore.getState();
   const tab = s.tabs.find((t) => t.key === s.activeKey);
   if (!tab) return;
+  // Painel SSH: o novo painel conecta ao mesmo destino (a conexão é compartilhada).
+  if (tab.kind === 'ssh' && tab.sshTarget) {
+    await openSshTab(tab.sshTarget, { splitFrom: { target: tab.key, direction } });
+    return;
+  }
   await openTab({
     profileId: tab.profileId,
     ...(tab.cwd ? { cwd: tab.cwd } : {}),
@@ -293,21 +323,171 @@ export function wirePtyEvents(): void {
   });
 
   api.on('pty:exit', ({ sessionId, exitCode }) => {
-    const tab = tabBySession(sessionId);
-    if (!tab) return;
-    if (exitCode === 0) {
-      disposeTab(tab.key);
-      return;
-    }
-    // sudo/gsudo saem logo com erro quando o UAC é recusado.
-    if (tab.elevated && Date.now() - tab.startedAt < ELEVATION_CANCEL_WINDOW_MS) {
-      useStore.getState().updateTab(tab.key, { status: 'error', error: 'Elevação cancelada', sessionId: null, commandRunning: false });
-      return;
-    }
-    useStore.getState().updateTab(tab.key, { status: 'exited', exitCode, sessionId: null, commandRunning: false });
+    if (tabBySession(sessionId)) handleExit(sessionId, exitCode);
+    else earlyExit.set(sessionId, exitCode);
   });
 }
 
+function handleExit(sessionId: string, exitCode: number): void {
+  const tab = tabBySession(sessionId);
+  if (!tab) return;
+  if (exitCode === 0) {
+    disposeTab(tab.key);
+    return;
+  }
+  if (tab.kind === 'ssh') {
+    // A tela fica como estava; o motivo vem da etapa da sessão (ssh:state).
+    const state = useStore.getState().sshStates[sessionId];
+    useStore.getState().updateTab(tab.key, {
+      status: state?.stage === 'failed' ? 'error' : 'exited',
+      // Falha: a mensagem do erro; queda: o motivo ("o servidor não respondeu").
+      error: state?.stage === 'failed' ? (state.message ?? 'Falha na conexão') : (state?.message ?? null),
+      exitCode,
+      sessionId: null,
+      commandRunning: false,
+    });
+    return;
+  }
+  // sudo/gsudo saem logo com erro quando o UAC é recusado.
+  if (tab.elevated && Date.now() - tab.startedAt < ELEVATION_CANCEL_WINDOW_MS) {
+    useStore.getState().updateTab(tab.key, { status: 'error', error: 'Elevação cancelada', sessionId: null, commandRunning: false });
+    return;
+  }
+  useStore.getState().updateTab(tab.key, { status: 'exited', exitCode, sessionId: null, commandRunning: false });
+}
+
 export function profileName(tab: Tab): string {
+  if (tab.kind === 'ssh') return tab.sshLabel ?? 'SSH';
   return profileOf(useStore.getState(), tab.profileId)?.name ?? tab.profileId;
+}
+
+// ---------- abas SSH ----------
+
+export interface OpenSshTabOptions {
+  splitFrom?: { target: string; direction: SplitDirection };
+  /** Cria o painel sem aba (workspaces e sessão restaurada montam o grupo depois). */
+  detached?: boolean;
+  /** false: a aba fica "Desconectado" até o usuário pedir (sessão restaurada). */
+  connect?: boolean;
+  /** Nome a mostrar antes da primeira conexão. */
+  label?: string;
+}
+
+/** Nome do destino como o renderer o conhece (antes da resposta do main). */
+export function sshTargetLabel(target: SshTarget): string {
+  if (target.kind === 'host') return useStore.getState().config?.hosts.hosts.find((h) => h.id === target.hostId)?.name ?? 'Host não encontrado';
+  return `${target.username ? `${target.username}@` : ''}${target.address}${target.port === 22 ? '' : `:${target.port}`}`;
+}
+
+/** Abre uma aba (ou painel) SSH. A conexão pode pedir fingerprint e credenciais pelo diálogo de SSH. */
+export async function openSshTab(target: SshTarget, options: OpenSshTabOptions = {}): Promise<string | null> {
+  const store = useStore.getState();
+  const { config } = store;
+  if (!config) return null;
+  const key = `tab-${++tabCounter}`;
+  terminals.create(key, config.settings, {
+    onInput: (data) => {
+      const tab = useStore.getState().tabs.find((t) => t.key === key);
+      if (!tab) return;
+      if (tab.sessionId) {
+        api.send('pty:write', { sessionId: tab.sessionId, data });
+        return;
+      }
+      // Enter numa aba desconectada reconecta.
+      if (data === '\r' && (tab.status === 'exited' || tab.status === 'disconnected' || tab.status === 'error')) void connectSsh(key);
+    },
+    onResize: (cols, rows) => {
+      const sessionId = useStore.getState().tabs.find((t) => t.key === key)?.sessionId;
+      if (sessionId) api.send('pty:resize', { sessionId, cols, rows });
+    },
+    onTitle: (title) => useStore.getState().updateTab(key, { shellTitle: title || null }),
+    // Sem integração de shell no servidor: pasta e comandos não são rastreados.
+    onCwd: () => undefined,
+    onCommandStart: () => undefined,
+    onCommandEnd: () => undefined,
+    onNodeVersion: () => undefined,
+  });
+
+  const hostMissing = target.kind === 'host' && !config.hosts.hosts.some((h) => h.id === target.hostId);
+  store.addTab({
+    key,
+    sessionId: null,
+    kind: 'ssh',
+    profileId: '',
+    sshTarget: target,
+    sshLabel: options.label ?? sshTargetLabel(target),
+    projectId: null,
+    shellTitle: null,
+    cwd: null,
+    envGeneration: store.envGeneration,
+    status: hostMissing ? 'error' : options.connect === false ? 'disconnected' : 'starting',
+    exitCode: null,
+    error: hostMissing ? 'Host não encontrado' : null,
+    commandRunning: false,
+    elevated: false,
+    envProfileId: null,
+    startedAt: Date.now(),
+    nodeVersion: null,
+  });
+  if (options.detached) {
+    // o grupo é montado por quem chamou
+  } else if (options.splitFrom && groupOf(useStore.getState().groups, options.splitFrom.target)) {
+    store.addPaneToGroup(options.splitFrom.target, key, options.splitFrom.direction);
+  } else {
+    store.addGroup(key);
+  }
+  if (!hostMissing && options.connect !== false) await connectSsh(key);
+  terminals.focus(key);
+  return key;
+}
+
+/** Conecta (ou reconecta) a aba SSH: sempre uma sessão nova, no mesmo painel. */
+export async function connectSsh(key: string): Promise<void> {
+  const tab = useStore.getState().tabs.find((t) => t.key === key);
+  if (!tab?.sshTarget || tab.sessionId) return;
+  if (tab.sshTarget.kind === 'host' && !hostExists(tab.sshTarget.hostId)) {
+    useStore.getState().updateTab(key, { status: 'error', error: 'Host não encontrado' });
+    return;
+  }
+  if (tab.status !== 'starting') terminals.write(key, '\r\n');
+  useStore.getState().updateTab(key, { status: 'starting', exitCode: null, error: null, startedAt: Date.now() });
+  await nextFrame();
+  const dims = terminals.fit(key) ?? terminals.dimensions(key);
+  try {
+    const res = await api.invoke('ssh:connect', { target: tab.sshTarget, cols: dims.cols, rows: dims.rows });
+    useStore.getState().updateTab(key, { sessionId: res.sessionId, status: 'running', sshLabel: res.label });
+    adoptSession(key, res.sessionId);
+  } catch (err) {
+    useStore.getState().updateTab(key, { status: 'error', error: err instanceof Error ? err.message : String(err) });
+  }
+}
+
+function hostExists(hostId: string): boolean {
+  return !!useStore.getState().config?.hosts.hosts.some((h) => h.id === hostId);
+}
+
+/** Espera a aba SSH conectar (para comandos iniciais de workspace); false se falhar ou demorar. */
+export function waitForSshConnected(key: string, timeoutMs = 60_000): Promise<boolean> {
+  return new Promise((resolve) => {
+    const check = (): boolean | null => {
+      const s = useStore.getState();
+      const tab = s.tabs.find((t) => t.key === key);
+      if (!tab || tab.status === 'error' || tab.status === 'exited' || tab.status === 'disconnected') return false;
+      if (tab.sessionId && s.sshStates[tab.sessionId]?.stage === 'connected') return true;
+      return null;
+    };
+    const first = check();
+    if (first !== null) return resolve(first);
+    const timer = setTimeout(() => {
+      unsubscribe();
+      resolve(false);
+    }, timeoutMs);
+    const unsubscribe = useStore.subscribe(() => {
+      const result = check();
+      if (result === null) return;
+      clearTimeout(timer);
+      unsubscribe();
+      resolve(result);
+    });
+  });
 }

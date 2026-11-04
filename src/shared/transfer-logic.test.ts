@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { defaultSettings, type Project, type SavedCommand } from './model';
+import { defaultHostsFile, defaultKeychainFile, defaultSettings, type Project, type SavedCommand } from './model';
 import { exportFileSchema } from './transfer';
 import { applyImport, buildExport, previewItems, type DataSnapshot } from './transfer-logic';
 
@@ -17,6 +17,8 @@ const data: DataSnapshot = {
     ...defaultSettings,
     profiles: { overrides: {}, custom: [{ id: 'node', name: 'Node REPL', executable: 'node.exe', args: [], cwd: null, color: null, icon: null, shellIntegration: false }] },
   },
+  hosts: defaultHostsFile,
+  keychain: defaultKeychainFile,
 };
 
 describe('buildExport', () => {

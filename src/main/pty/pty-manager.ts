@@ -7,6 +7,7 @@ import type { Env } from '../env/env-utils';
 import { NotFoundError } from '../ipc/registry';
 import type { LaunchSpec } from '../integration/launch';
 import type { PlatformAdapter, ProcessTracker, TrackedProcess } from '../platform/types';
+import { ptyBackend, type TerminalBackend } from './terminal-backend';
 
 export const FLUSH_INTERVAL_MS = 5;
 export const FLUSH_MAX_BYTES = 64 * 1024;
@@ -43,9 +44,15 @@ const NOTHING_DETACHED: KillResult = { token: null, detached: [] };
 
 export interface SessionInfo {
   id: string;
+  /** 'local': shell em PTY; 'ssh': shell remoto (sem processo local, pasta nem integração). */
+  kind: 'local' | 'ssh';
+  /** Perfil de shell (vazio em sessões SSH). */
   profileId: string;
+  /** Host da sessão SSH (null na conexão rápida e em sessões locais). */
+  hostId: string | null;
   projectId: string | null;
-  pid: number;
+  /** PID do shell local; null em sessões SSH. */
+  pid: number | null;
   envGeneration: number;
   initialCwd: string;
   cwd: string;
@@ -59,7 +66,7 @@ export interface SessionInfo {
 }
 
 interface Session extends SessionInfo {
-  pty: IPty;
+  backend: TerminalBackend;
   elevation: Exclude<ElevationMechanism, { kind: 'external' }> | undefined;
   pending: string[];
   pendingBytes: number;
@@ -110,22 +117,46 @@ export class PtyManager {
     } catch (err) {
       throw new Error(`Falha ao iniciar "${profile.name}": ${err instanceof Error ? err.message : String(err)}`);
     }
+    return this.register(
+      {
+        kind: 'local',
+        profileId: profile.id,
+        hostId: null,
+        projectId: req.projectId ?? null,
+        initialCwd: cwd,
+        elevated: !!elevation,
+        elevation,
+        envProfileId: req.envProfileId ?? null,
+      },
+      ptyBackend(pty),
+    );
+  }
 
+  /**
+   * Sessão remota (SSH): o backend já existe e conecta sozinho; até lá, escritas são descartadas.
+   * Não há processo local, pasta atual nem rastreamento de processos.
+   */
+  createRemote(req: { hostId: string | null }, backend: TerminalBackend): SessionInfo {
+    return this.register(
+      { kind: 'ssh', profileId: '', hostId: req.hostId, projectId: null, initialCwd: '', elevated: false, elevation: undefined, envProfileId: null },
+      backend,
+    );
+  }
+
+  private register(
+    fields: Pick<Session, 'kind' | 'profileId' | 'hostId' | 'projectId' | 'initialCwd' | 'elevated' | 'elevation' | 'envProfileId'>,
+    backend: TerminalBackend,
+  ): SessionInfo {
     const session: Session = {
+      ...fields,
       id: randomUUID(),
-      profileId: profile.id,
-      projectId: req.projectId ?? null,
-      pid: pty.pid,
+      pid: backend.pid,
       envGeneration: this.deps.envGeneration(),
-      initialCwd: cwd,
-      cwd,
+      cwd: fields.initialCwd,
       commandRunning: false,
-      elevated: !!elevation,
-      elevation,
-      envProfileId: req.envProfileId ?? null,
       integrated: false,
       exited: false,
-      pty,
+      backend,
       pending: [],
       pendingBytes: 0,
       flushTimer: null,
@@ -134,15 +165,15 @@ export class PtyManager {
       killing: false,
     };
     this.sessions.set(session.id, session);
-    this.deps.tracker?.track(session.id, pty.pid);
+    if (session.pid !== null) this.deps.tracker?.track(session.id, session.pid);
 
-    pty.onData((data) => this.enqueue(session, data));
-    pty.onExit(({ exitCode }) => {
+    backend.onData((data) => this.enqueue(session, data));
+    backend.onExit((exitCode) => {
       this.flush(session);
       session.exited = true;
       this.sessions.delete(session.id);
       // Saída pelo próprio shell (exit): os processos que ele deixou continuam rodando.
-      if (!session.killing) void this.deps.tracker?.release(session.id);
+      if (!session.killing && session.pid !== null) void this.deps.tracker?.release(session.id);
       this.deps.send('pty:exit', { sessionId: session.id, exitCode });
       this.notify(session, 'exit');
     });
@@ -173,7 +204,7 @@ export class PtyManager {
     session.unacked += data.length;
     if (!session.paused && session.unacked > HIGH_WATERMARK) {
       session.paused = true;
-      session.pty.pause();
+      session.backend.pause();
     }
   }
 
@@ -183,19 +214,19 @@ export class PtyManager {
     session.unacked = Math.max(0, session.unacked - bytes);
     if (session.paused && session.unacked < LOW_WATERMARK) {
       session.paused = false;
-      session.pty.resume();
+      session.backend.resume();
     }
   }
 
   write(sessionId: string, data: string): void {
-    this.sessions.get(sessionId)?.pty.write(data);
+    this.sessions.get(sessionId)?.backend.write(data);
   }
 
   resize(sessionId: string, cols: number, rows: number): void {
     const session = this.sessions.get(sessionId);
     if (!session || session.exited) return;
     try {
-      session.pty.resize(cols, rows);
+      session.backend.resize(cols, rows);
     } catch {
       // o processo pode ter acabado de sair
     }
@@ -213,6 +244,8 @@ export class PtyManager {
   async isBusy(sessionId: string): Promise<boolean> {
     const session = this.sessions.get(sessionId);
     if (!session) throw new NotFoundError('Sessão não encontrada');
+    // SSH: não há como saber se há comando rodando no servidor (não conta como ocupada).
+    if (session.pid === null) return false;
     // Com integração, as marcas de comando são a fonte confiável (o bash do Git, por exemplo,
     // é um lançador que sempre tem um processo filho).
     if (session.integrated) return session.commandRunning;
@@ -262,19 +295,30 @@ export class PtyManager {
     const session = this.sessions.get(sessionId);
     if (!session) return [];
     session.killing = true;
-    const descendants = await this.deps.platform.listDescendants(session.pid).catch(() => []);
+    const pid = session.pid;
+    if (pid === null) {
+      // Remota: fechar o canal basta (o pool encerra a conexão quando ninguém mais a usa).
+      try {
+        session.backend.kill();
+      } catch {
+        // já encerrado
+      }
+      this.sessions.delete(sessionId);
+      return [];
+    }
+    const descendants = await this.deps.platform.listDescendants(pid).catch(() => []);
     try {
-      session.pty.kill();
+      session.backend.kill();
     } catch {
       // já encerrado
     }
     await new Promise((r) => setTimeout(r, KILL_GRACE_MS));
     const survivors = descendants.filter(isAlive);
-    if (isAlive(session.pid) || survivors.length > 0) {
-      await this.deps.platform.killTree(session.pid, survivors);
+    if (isAlive(pid) || survivors.length > 0) {
+      await this.deps.platform.killTree(pid, survivors);
     }
     this.sessions.delete(sessionId);
-    const known = new Set([session.pid, ...descendants]);
+    const known = new Set([pid, ...descendants]);
     const left = (await this.deps.tracker?.release(sessionId)) ?? [];
     return left.filter((p) => !known.has(p.pid));
   }
@@ -282,6 +326,7 @@ export class PtyManager {
   async restart(sessionId: string, cols: number, rows: number): Promise<SessionInfo> {
     const session = this.sessions.get(sessionId);
     if (!session) throw new NotFoundError('Sessão não encontrada');
+    if (session.kind === 'ssh') throw new Error('Sessões SSH reconectam por ssh:reconnect.');
     const { profileId, cwd, projectId, elevation, envProfileId } = session;
     // Reiniciar não pergunta: o que saiu da árvore continua rodando.
     await this.killSession(sessionId);
@@ -315,7 +360,9 @@ export class PtyManager {
   private info(s: Session): SessionInfo {
     return {
       id: s.id,
+      kind: s.kind,
       profileId: s.profileId,
+      hostId: s.hostId,
       projectId: s.projectId,
       pid: s.pid,
       envGeneration: s.envGeneration,

@@ -1,7 +1,15 @@
 import { useEffect } from 'react';
 import { useStore, EMPTY } from '../store';
 
-const FILE_NAMES = { settings: 'settings.json', commands: 'commands.json', projects: 'projects.json', workspaces: 'workspaces.json' } as const;
+const FILE_NAMES = {
+  settings: 'settings.json',
+  commands: 'commands.json',
+  projects: 'projects.json',
+  workspaces: 'workspaces.json',
+  hosts: 'hosts.json',
+  keychain: 'keychain.json',
+  knownHosts: 'known_hosts.json',
+} as const;
 
 /** Banner não bloqueante com os erros de configuração; some quando o arquivo é corrigido. */
 export function ConfigBanner(): JSX.Element | null {

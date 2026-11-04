@@ -163,3 +163,6 @@ footer .wrap { display: flex; justify-content: space-between; align-items: cente
   .toc { display: none; }
   .doc table { display: block; overflow-x: auto; }
 }
+
+.card-wide { grid-column: 1 / -1; }
+.tag-new { display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px; background: #f59a2e26; color: var(--accent); font-size: 12px; font-weight: 600; vertical-align: middle; }

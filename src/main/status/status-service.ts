@@ -53,6 +53,8 @@ export class StatusService {
   }
 
   onSessionEvent(info: SessionInfo, event: 'created' | 'state' | 'exit'): void {
+    // Sessões SSH: a pasta é remota; Git e versões locais não se aplicam (a barra mostra usuário@host).
+    if (info.kind === 'ssh') return;
     if (event === 'exit') {
       this.drop(info.id);
       return;

@@ -1,12 +1,21 @@
 import type { StateCreator } from 'zustand';
+import type { SshTarget } from '@shared/ssh';
 
-export type TabStatus = 'starting' | 'running' | 'exited' | 'error';
+/** 'disconnected': aba SSH restaurada, esperando o usuário pedir para conectar. */
+export type TabStatus = 'starting' | 'running' | 'exited' | 'error' | 'disconnected';
 
 export interface Tab {
   /** Identificador estável no renderer (a sessão muda ao reiniciar). */
   key: string;
   sessionId: string | null;
+  /** 'ssh': shell remoto (sem perfil de shell, pasta local nem integração). */
+  kind: 'local' | 'ssh';
+  /** Perfil de shell; vazio em abas SSH. */
   profileId: string;
+  /** Destino da aba SSH (host cadastrado ou conexão rápida). */
+  sshTarget: SshTarget | null;
+  /** Nome mostrado na aba SSH (nome do host ou usuário@endereço). */
+  sshLabel: string | null;
   projectId: string | null;
   shellTitle: string | null;
   cwd: string | null;

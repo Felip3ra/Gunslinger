@@ -4,6 +4,7 @@ import { eventToAccelerator } from './keyboard';
 import { hasModalOpen, useStore } from './store';
 import { closeTab, cyclePane, cycleTab, openTab, splitActive } from './tabs';
 import { terminals } from './terminal/terminal-registry';
+import { newHost } from './store/hosts-slice';
 
 export interface Action {
   id: ActionId;
@@ -167,7 +168,17 @@ export const actions: Record<ActionId, Action> = {
     run: () => useStore.setState({ transferDialog: { kind: 'export' } }),
   },
   'data.import': { id: 'data.import', title: 'Importar comandos e perfis', run: () => void startImport() },
+  'hosts.new': { id: 'hosts.new', title: 'Novo host SSH', run: () => useStore.setState({ hostDialog: newHost() }) },
+  'keychain.open': { id: 'keychain.open', title: 'Keychain (chaves e identidades SSH)', run: () => useStore.setState({ keychainOpen: true }) },
+  'hosts.importOpenSsh': { id: 'hosts.importOpenSsh', title: 'Importar hosts do ~/.ssh/config', run: () => void startOpenSshImport() },
 };
+
+/** Lê o ~/.ssh/config e mostra a prévia; nada é gravado antes da confirmação. */
+export async function startOpenSshImport(): Promise<void> {
+  const preview = await api.invoke('transfer:previewOpenSsh');
+  if ('error' in preview) useStore.getState().pushNotice('error', preview.error);
+  else useStore.setState({ transferDialog: { kind: 'import', preview } });
+}
 
 /** Ação associada ao atalho do evento, segundo os keybindings atuais. */
 export function actionForEvent(e: KeyboardEvent): Action | null {

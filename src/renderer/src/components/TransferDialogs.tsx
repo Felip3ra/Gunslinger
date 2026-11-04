@@ -12,6 +12,7 @@ function ExportDialog(): JSX.Element {
   const [selected, setSelected] = useState<Set<string>>(() => new Set(categories));
   const [profileIds, setProfileIds] = useState<string[]>([]);
   const [projectIds, setProjectIds] = useState<string[]>([]);
+  const [hostIds, setHostIds] = useState<string[]>([]);
   const toggle = (list: string[], id: string): string[] => (list.includes(id) ? list.filter((x) => x !== id) : [...list, id]);
 
   return (
@@ -50,13 +51,27 @@ function ExportDialog(): JSX.Element {
           {projectIds.length > 0 && <p className="warn-text">As pastas raiz são exportadas como estão e podem não existir em outra máquina.</p>}
         </fieldset>
       )}
+      {config.hosts.hosts.length > 0 && (
+        <fieldset className="variables" data-testid="export-hosts">
+          <legend>Hosts SSH</legend>
+          {config.hosts.hosts.map((h) => (
+            <label key={h.id} className="checkline">
+              <input type="checkbox" checked={hostIds.includes(h.id)} onChange={() => setHostIds((l) => toggle(l, h.id))} />
+              {h.name}
+            </label>
+          ))}
+          {hostIds.length > 0 && (
+            <p className="hint">Vão junto os grupos, os hosts de salto e as identidades. Senhas, frases-senha e chaves guardadas no keychain nunca são exportadas.</p>
+          )}
+        </fieldset>
+      )}
       <div className="modal-actions">
         <button onClick={close}>Cancelar</button>
         <button
           className="primary"
           onClick={async () => {
             const allSelected = categories.every((c) => selected.has(c));
-            const result = await api.invoke('transfer:export', { categories: allSelected ? 'all' : [...selected], profileIds, projectIds });
+            const result = await api.invoke('transfer:export', { categories: allSelected ? 'all' : [...selected], profileIds, projectIds, hostIds });
             if (result) {
               useStore.getState().pushNotice('info', `Exportado para ${result.path}`);
               close();
@@ -70,7 +85,7 @@ function ExportDialog(): JSX.Element {
   );
 }
 
-const KIND_LABEL = { command: 'Comando', profile: 'Perfil', project: 'Projeto' } as const;
+const KIND_LABEL = { command: 'Comando', profile: 'Perfil', project: 'Projeto', host: 'Host', identity: 'Identidade', key: 'Chave' } as const;
 
 function ImportDialog({ preview }: { preview: ImportPreview }): JSX.Element {
   const [decisions, setDecisions] = useState<Record<string, ConflictAction>>({});
@@ -81,6 +96,18 @@ function ImportDialog({ preview }: { preview: ImportPreview }): JSX.Element {
     <div className="modal wide" role="dialog" aria-modal="true" aria-label="Importar" data-testid="import-dialog">
       <h2>Importar de {preview.sourcePath}</h2>
       <p>Revise os itens. Nada é gravado (nem executado) antes de você confirmar.</p>
+      {preview.warnings && preview.warnings.length > 0 && (
+        <details data-testid="import-warnings">
+          <summary className="warn-text">{preview.warnings.length} item(ns) não serão importados</summary>
+          <ul>
+            {preview.warnings.map((w) => (
+              <li key={w}>
+                <small>{w}</small>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
       {conflicts.length > 0 && (
         <div className="row-actions">
           <span>Para todos os conflitos:</span>

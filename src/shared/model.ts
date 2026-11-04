@@ -6,3 +6,6 @@ export * from './model/projects';
 export * from './model/workspaces';
 export * from './model/ui-state';
 export * from './model/exchange';
+export * from './model/hosts';
+export * from './model/keychain';
+export * from './model/known-hosts';
