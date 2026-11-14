@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const shellTypes = ['powershell', 'pwsh', 'cmd', 'gitbash', 'wsl', 'custom'] as const;
+export const shellTypes = ['powershell', 'pwsh', 'cmd', 'gitbash', 'wsl', 'bash', 'zsh', 'fish', 'custom'] as const;
 export type ShellType = (typeof shellTypes)[number];
 
 export const hexColor = z.string().regex(/^#[0-9a-fA-F]{6}$/, 'cor no formato #rrggbb');

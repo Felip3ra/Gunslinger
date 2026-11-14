@@ -66,8 +66,12 @@ async function prepareIntegrationScripts(dataDir: string): Promise<IntegrationSc
     const target = join(dataDir, 'integration');
     await mkdir(target, { recursive: true });
     await copyFile(join(resourcesDir(), 'gunslinger.bash'), join(target, 'gunslinger.bash'));
+    // zsh: os arquivos ganham o nome com ponto numa pasta própria, usada como ZDOTDIR da sessão.
+    const zshDir = join(target, 'zsh');
+    await mkdir(zshDir, { recursive: true });
+    for (const name of ['zshenv', 'zprofile', 'zshrc']) await copyFile(join(resourcesDir(), `gunslinger.${name}`), join(zshDir, `.${name}`));
     const powershell = await readFile(join(resourcesDir(), 'gunslinger.ps1'), 'utf8');
-    return { powershell, bashPath: join(target, 'gunslinger.bash') };
+    return { powershell, bashPath: join(target, 'gunslinger.bash'), zshDir };
   } catch (err) {
     console.error('Integração com o shell indisponível:', err);
     return null;
@@ -81,6 +85,8 @@ export interface AppServices {
   dialogs: DialogPort;
   /** Libera observadores e recursos antes de sair. */
   dispose(): void;
+  /** Encerra os testes em execução (senão `dotnet test`/`npm test` ficariam órfãos). */
+  cancelTests(): Promise<void>;
   /** Liga a janela principal: avisos do SO e o fechamento usado pela atualização. */
   attachWindow(win: BrowserWindow, quit: QuitFn): void;
 }
@@ -96,9 +102,10 @@ export async function compose(getWindow: () => BrowserWindow | null): Promise<Ap
   await config.load();
   config.startWatching();
 
-  const env = new EnvironmentService(platform, fromProcessEnv(process.env));
+  const launchEnv = fromProcessEnv(process.env);
   // O Electron herda ELECTRON_RUN_AS_NODE do VS Code; os shells não devem herdar.
-  delete env.current().env['ELECTRON_RUN_AS_NODE'];
+  delete launchEnv['ELECTRON_RUN_AS_NODE'];
+  const env = new EnvironmentService(platform, await platform.launchEnvironment(launchEnv));
 
   const shells = new ShellService(platform, env, config);
   shells.init();
@@ -232,6 +239,7 @@ export async function compose(getWindow: () => BrowserWindow | null): Promise<Ap
     knownHosts,
     prompts,
     linkIdentity: (hostId, identityId) => config.mutateHosts((f) => ({ ...f, hosts: f.hosts.map((h) => (h.id === hostId ? { ...h, identityId } : h)) })),
+    systemAgent: () => platform.sshAgentSocket(env.current().env),
   });
   const sshSessions = new SshSessionService({
     pool: sshPool,
@@ -243,7 +251,7 @@ export async function compose(getWindow: () => BrowserWindow | null): Promise<Ap
   registerSshHandlers(ipc, { hosts: new HostService(config), sessions: sshSessions, prompts, transfer });
 
   const update = new UpdateService({
-    updater: electronUpdaterPort(),
+    updater: electronUpdaterPort(platform.supportsAutoUpdate(env.current().env)),
     currentVersion: app.getVersion(),
     auto: () => config.snapshot().settings.updates.auto,
     onChange: (s) => send('update:changed', s),
@@ -256,6 +264,7 @@ export async function compose(getWindow: () => BrowserWindow | null): Promise<Ap
     config,
     pty,
     dialogs,
+    cancelTests: () => runner.cancelAll(),
     attachWindow: (win, quitFn) => {
       quit = quitFn;
       let timer: NodeJS.Timeout | null = null;

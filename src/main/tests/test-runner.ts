@@ -1,4 +1,4 @@
-import { spawn } from 'node:child_process';
+import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -54,16 +54,27 @@ export class TestRunnerService {
     const resultDir = await mkdtemp(join(tmpdir(), 'gunslinger-tests-'));
     const resultFile = target.kind === 'dotnet' ? `${runId}.trx` : `${runId}.json`;
     const cwd = target.kind === 'node' && target.dir ? join(root, target.dir) : root;
-    const pm = target.kind === 'node' ? await this.deps.packageManager(root, target.dir) : 'npm';
-    const { tool, args } = testCommand(target, pm, resultDir, resultFile, filter);
     const env = this.deps.env();
-    const file = await this.deps.platform.resolveExecutable(tool, env);
-    if (!file) {
-      queueMicrotask(() => this.deps.onFinished({ runId, result: null, error: `${tool} não encontrado no PATH.`, cancelled: false }));
-      return runId;
+    let tool: string;
+    let args: string[];
+    let child: ChildProcessWithoutNullStreams;
+    try {
+      const pm = target.kind === 'node' ? await this.deps.packageManager(root, target.dir) : 'npm';
+      ({ tool, args } = testCommand(target, pm, resultDir, resultFile, filter));
+      const file = await this.deps.platform.resolveExecutable(tool, env);
+      if (!file) {
+        await removeDir(resultDir);
+        const missing = tool;
+        queueMicrotask(() => this.deps.onFinished({ runId, result: null, error: `${missing} não encontrado no PATH.`, cancelled: false }));
+        return runId;
+      }
+      const spec = this.deps.platform.buildSpawn(file, args);
+      child = spawn(spec.file, spec.args, { cwd, env, windowsHide: true, windowsVerbatimArguments: spec.windowsVerbatimArguments ?? false });
+    } catch (err) {
+      // Nada foi iniciado: a pasta de resultados não pode ficar para trás.
+      await removeDir(resultDir);
+      throw err;
     }
-    const spec = this.deps.platform.buildSpawn(file, args);
-    const child = spawn(spec.file, spec.args, { cwd, env, windowsHide: true, windowsVerbatimArguments: spec.windowsVerbatimArguments ?? false });
     const running: Running = { pid: child.pid, cancelled: false };
     this.runs.set(runId, running);
     this.deps.onOutput(runId, `> ${tool} ${args.join(' ')}\n`);
@@ -88,7 +99,7 @@ export class TestRunnerService {
     const running = this.runs.get(runId);
     if (!running) return;
     this.runs.delete(runId);
-    await rm(resultDir, { recursive: true, force: true }).catch(() => undefined);
+    await removeDir(resultDir);
     this.deps.onFinished({ runId, result: running.cancelled ? null : result, error: running.cancelled ? null : error, cancelled: running.cancelled });
   }
 
@@ -99,4 +110,13 @@ export class TestRunnerService {
     const descendants = await this.deps.platform.listDescendants(running.pid).catch(() => []);
     await this.deps.platform.killTree(running.pid, descendants);
   }
+
+  /** Encerra todas as execuções em andamento (o app está fechando). */
+  async cancelAll(): Promise<void> {
+    await Promise.all([...this.runs.keys()].map((id) => this.cancel(id).catch(() => undefined)));
+  }
+}
+
+function removeDir(dir: string): Promise<void> {
+  return rm(dir, { recursive: true, force: true }).catch(() => undefined);
 }

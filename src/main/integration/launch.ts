@@ -13,8 +13,10 @@ export interface LaunchSpec {
 export interface IntegrationScripts {
   /** Conteúdo de gunslinger.ps1 (vai embutido em -EncodedCommand). */
   powershell: string;
-  /** Caminho Windows de gunslinger.bash. */
+  /** Caminho de gunslinger.bash (no Windows, o caminho Windows). */
   bashPath: string;
+  /** Pasta com .zshenv, .zprofile e .zshrc do app, usada como ZDOTDIR. */
+  zshDir?: string;
 }
 
 /** -EncodedCommand espera base64 de UTF-16LE. */
@@ -67,6 +69,7 @@ export function buildLaunch(profile: ShellProfile, cwd: string, baseEnv: Env, sc
     }
 
     case 'gitbash':
+    case 'bash':
       return {
         file: profile.executable,
         args: integrate
@@ -90,6 +93,15 @@ export function buildLaunch(profile: ShellProfile, cwd: string, baseEnv: Env, sc
       };
     }
 
+    case 'zsh': {
+      if (!integrate || !scripts.zshDir) return { file: profile.executable, args: profile.args, cwd, env };
+      // O zsh lê os arquivos de inicialização de ZDOTDIR: os do app carregam os do usuário e instalam os ganchos.
+      setVar(env, 'GUNSLINGER_USER_ZDOTDIR', getVar(env, 'ZDOTDIR') ?? getVar(env, 'HOME') ?? '');
+      setVar(env, 'ZDOTDIR', scripts.zshDir);
+      return { file: profile.executable, args: profile.args, cwd, env };
+    }
+
+    case 'fish':
     case 'custom':
       return { file: profile.executable, args: profile.args, cwd, env };
   }

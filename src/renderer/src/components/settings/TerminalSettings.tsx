@@ -10,6 +10,7 @@ export function TerminalSettings(): JSX.Element {
       <label className="field">
         <span>Perfil padrão</span>
         <select value={s.defaultProfile ?? ''} onChange={(e) => void update(['defaultProfile'], e.target.value || null)}>
+          <option value="">Automático (o shell preferido do sistema)</option>
           {profiles.map((p) => (
             <option key={p.id} value={p.id}>
               {p.name}

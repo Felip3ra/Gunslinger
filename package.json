@@ -2,7 +2,8 @@
   "name": "gunslinger",
   "productName": "Gunslinger",
   "version": "1.0.0",
-  "description": "Terminal desktop personalizável para Windows, com foco em .NET e Node.js",
+  "description": "Terminal desktop personalizável para Windows, macOS e Linux, com foco em .NET e Node.js",
+  "homepage": "https://gunslinger.vercel.app",
   "main": "out/main/index.js",
   "author": "Felipe Santana",
   "license": "UNLICENSED",
@@ -19,6 +20,8 @@
     "test:e2e": "npm run build && playwright test",
     "postinstall": "electron-rebuild -f -o @vscode/windows-process-tree",
     "dist": "npm run build && electron-builder --win --publish never",
+    "dist:linux": "npm run build && electron-builder --linux --publish never",
+    "dist:mac": "npm run build && electron-builder --mac --publish never",
     "site:capture": "electron-vite build && playwright test -c site/capture/playwright.config.ts"
   },
   "dependencies": {

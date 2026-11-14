@@ -11,7 +11,8 @@ files:
 extraResources:
   - from: resources/shell-integration
     to: shell-integration
-# node-pty usa binários N-API pré-compilados; recompilar do zero falha (winpty).
+# node-pty usa binários N-API pré-compilados (Windows e macOS); recompilar do zero falha (winpty).
+# No Linux não há pré-compilado: o `npm ci` compila o node-pty, e o binário N-API serve ao Electron.
 # windows-process-tree já é recompilado no postinstall.
 npmRebuild: false
 # Grava o ícone no Gunslinger.exe (ver build/after-pack.cjs).
@@ -27,6 +28,30 @@ win:
   icon: build/icon.ico
   target:
     - target: nsis
+      arch: [x64]
+mac:
+  category: public.app-category.developer-tools
+  icon: build/icon.png
+  # Sem certificado da Apple: assinatura ad-hoc ("-"), o mínimo para o app abrir em Macs com Apple Silicon.
+  # Na primeira abertura o Gatekeeper avisa (botão direito no app → Abrir). Sem assinatura de verdade
+  # não há atualização automática no macOS (ver supportsAutoUpdate em src/main/platform/posix.ts).
+  identity: '-'
+  # Nome fixo: o site aponta para releases/latest/download/Gunslinger-mac-<arch>.dmg.
+  artifactName: Gunslinger-mac-${arch}.${ext}
+  target:
+    - target: dmg
+      arch: [arm64, x64]
+linux:
+  category: Development
+  icon: build/icon.png
+  synopsis: Terminal com foco em .NET e Node.js
+  maintainer: Felipe Santana <Felip3ra@users.noreply.github.com>
+  # Nomes fixos para o site: Gunslinger-linux-x86_64.AppImage e Gunslinger-linux-amd64.deb.
+  artifactName: Gunslinger-linux-${arch}.${ext}
+  target:
+    - target: AppImage
+      arch: [x64]
+    - target: deb
       arch: [x64]
 # Releases do GitHub: o workflow de release publica o instalador e o latest.yml, e a
 # atualização automática (electron-updater) lê o app-update.yml gerado a partir daqui.

@@ -6,6 +6,7 @@ import { promisify } from 'node:util';
 import { getVar, type Env } from '../env/env-utils';
 import { mergeWindowsEnvironment, parseRegExport } from '../env/windows-registry-env';
 import { detectWindowsShells } from '../shells/detect-windows';
+import { OPENSSH_AGENT_PIPE } from '../ssh/algorithms';
 import { parseNetstat, parseTasklist } from '@shared/ports';
 import { JobTracker } from './job-tracker';
 import type { DetectedShell, PlatformAdapter, SpawnSpec } from './types';
@@ -55,6 +56,18 @@ function quoteForCmd(arg: string): string {
 export const win32Adapter: PlatformAdapter = {
   name: 'win32',
   pathDelimiter: ';',
+
+  async launchEnvironment(current) {
+    return current;
+  },
+
+  sshAgentSocket() {
+    return OPENSSH_AGENT_PIPE;
+  },
+
+  supportsAutoUpdate() {
+    return true;
+  },
 
   async detectShells(env): Promise<DetectedShell[]> {
     return detectWindowsShells({

@@ -3,7 +3,7 @@ import type { IPty } from 'node-pty';
 import type { EventMap } from '@shared/ipc-contract';
 import { planInlineElevation, type ElevationMechanism } from '@shared/elevation';
 import type { ShellProfile } from '@shared/model';
-import type { Env } from '../env/env-utils';
+import { setVar, type Env } from '../env/env-utils';
 import { NotFoundError } from '../ipc/registry';
 import type { LaunchSpec } from '../integration/launch';
 import type { PlatformAdapter, ProcessTracker, TrackedProcess } from '../platform/types';
@@ -14,6 +14,8 @@ export const FLUSH_MAX_BYTES = 64 * 1024;
 export const HIGH_WATERMARK = 1024 * 1024;
 export const LOW_WATERMARK = 256 * 1024;
 const KILL_GRACE_MS = 1500;
+/** Sem resposta nesse tempo, a pergunta vale como "manter": depois disso os PIDs podem ter sido reutilizados. */
+export const HELD_TTL_MS = 5 * 60 * 1000;
 
 export type SpawnFn = (file: string, args: string[], options: { cols: number; rows: number; cwd: string; env: Env }) => IPty;
 
@@ -90,7 +92,7 @@ export class PtyManager {
   private readonly sessions = new Map<string, Session>();
   private readonly listeners = new Set<(info: SessionInfo, event: 'created' | 'state' | 'exit') => void>();
   /** Processos fora da árvore aguardando a resposta do usuário, por token. */
-  private readonly held = new Map<string, TrackedProcess[]>();
+  private readonly held = new Map<string, { list: TrackedProcess[]; timer: NodeJS.Timeout }>();
 
   constructor(private readonly deps: PtyManagerDeps) {}
 
@@ -109,7 +111,10 @@ export class PtyManager {
     if (req.envProfileId) {
       const vars = this.deps.environmentVariables(req.envProfileId);
       if (!vars) throw new NotFoundError(`Perfil de ambiente não encontrado: ${req.envProfileId}`);
-      spec.env = { ...spec.env, ...vars };
+      // setVar: no Windows "Path" e "PATH" são a mesma variável; um spread criaria as duas chaves.
+      const env = { ...spec.env };
+      for (const [name, value] of Object.entries(vars)) setVar(env, name, value);
+      spec.env = env;
     }
     let pty: IPty;
     try {
@@ -269,9 +274,11 @@ export class PtyManager {
 
   /** Encerra os processos guardados sob o token (o usuário escolheu encerrar). */
   async killDetached(token: string): Promise<void> {
-    const list = this.held.get(token);
+    const entry = this.held.get(token);
+    if (!entry) return;
     this.held.delete(token);
-    if (list) await this.killProcesses(list);
+    clearTimeout(entry.timer);
+    await this.killProcesses(entry.list);
   }
 
   private async decide(found: TrackedProcess[]): Promise<KillResult> {
@@ -282,7 +289,9 @@ export class PtyManager {
       return NOTHING_DETACHED;
     }
     const token = randomUUID();
-    this.held.set(token, found);
+    const timer = setTimeout(() => this.held.delete(token), HELD_TTL_MS);
+    timer.unref?.();
+    this.held.set(token, { list: found, timer });
     return { token, detached: found };
   }
 

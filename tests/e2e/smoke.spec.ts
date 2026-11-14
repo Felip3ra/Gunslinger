@@ -43,3 +43,21 @@ test('bloqueia navegação e window.open', async () => {
     await close();
   }
 });
+
+test('CSP aplicada no app carregado por file://: script inline não executa', async () => {
+  const { page, close } = await launchApp();
+  try {
+    const result = await page.evaluate(() => {
+      const doc = (globalThis as unknown as { document: { querySelector(s: string): { content: string } | null; createElement(t: string): { textContent: string }; head: { appendChild(n: unknown): void } } }).document;
+      const meta = doc.querySelector('meta[http-equiv="Content-Security-Policy"]');
+      const script = doc.createElement('script');
+      script.textContent = 'globalThis.__inlineRan = true';
+      doc.head.appendChild(script);
+      return { policy: meta?.content ?? null, inlineRan: (globalThis as Record<string, unknown>)['__inlineRan'] === true };
+    });
+    expect(result.policy).toContain("script-src 'self'");
+    expect(result.inlineRan).toBe(false);
+  } finally {
+    await close();
+  }
+});

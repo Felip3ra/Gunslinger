@@ -8,6 +8,8 @@ import { update } from './update';
 /** Agente, keepalive e tempo limite de conexão, e a lista de hosts conhecidos. */
 export function SshSettings(): JSX.Element {
   const ssh = useStore((s) => s.config!.settings.ssh);
+  // macOS e Linux: o agente do sistema é o do SSH_AUTH_SOCK, e o Pageant não existe.
+  const unix = useStore((s) => s.profiles.some((p) => p.source === 'detected' && ['bash', 'zsh', 'fish'].includes(p.shellType)));
   const [known, setKnown] = useState<KnownHostView[]>([]);
   const [filter, setFilter] = useState('');
   const reload = useCallback(() => void api.invoke('knownHosts:list').then(setKnown, () => setKnown([])), []);
@@ -24,8 +26,8 @@ export function SshSettings(): JSX.Element {
         <label className="field">
           <span>Agente SSH</span>
           <select aria-label="Agente SSH" value={ssh.agent} onChange={(e) => void update(['ssh', 'agent'], e.target.value)}>
-            <option value="openssh">OpenSSH do Windows (serviço ssh-agent)</option>
-            <option value="pageant">Pageant (PuTTY)</option>
+            <option value="openssh">{unix ? 'Agente do sistema (SSH_AUTH_SOCK)' : 'OpenSSH do Windows (serviço ssh-agent)'}</option>
+            {(!unix || ssh.agent === 'pageant') && <option value="pageant">Pageant (PuTTY)</option>}
             <option value="off">Não usar agente</option>
           </select>
         </label>

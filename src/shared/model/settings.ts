@@ -180,7 +180,7 @@ export type Settings = z.infer<typeof settingsSchema>;
 
 export const defaultSettings: Settings = {
   version: 1,
-  defaultProfile: 'builtin.pwsh',
+  defaultProfile: null,
   appearance: {
     fontFamily: 'Cascadia Mono, Consolas, monospace',
     fontSize: 14,

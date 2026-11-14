@@ -4,10 +4,11 @@ import type { UpdaterPort } from '../update/update-service';
 
 /**
  * Atualizador do app instalado: lê as releases do GitHub (configuração `publish` do
- * electron-builder, gravada em app-update.yml). Fora do app instalado devolve null.
+ * electron-builder, gravada em app-update.yml). Fora do app instalado, ou onde ele não consegue
+ * se substituir (`supported` falso: macOS sem assinatura, pacote .deb), devolve null.
  */
-export function electronUpdaterPort(): UpdaterPort | null {
-  if (!app.isPackaged) return null;
+export function electronUpdaterPort(supported = true): UpdaterPort | null {
+  if (!app.isPackaged || !supported) return null;
   const { autoUpdater } = electronUpdater;
   autoUpdater.autoDownload = false;
   autoUpdater.autoInstallOnAppQuit = true;

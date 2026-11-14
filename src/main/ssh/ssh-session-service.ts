@@ -15,6 +15,9 @@ export interface SshSessionDeps {
   cancelPrompts?(target: SshTarget): void;
 }
 
+/** Quantas sessões (vivas ou encerradas) ficam lembradas; sem limite, os mapas cresceriam a cada aba aberta. */
+export const MAX_REMEMBERED_SESSIONS = 200;
+
 /** Abas SSH: cria a sessão no PtyManager com o backend remoto e informa as etapas da conexão. */
 export class SshSessionService {
   private readonly targets = new Map<string, SshTarget>();
@@ -43,6 +46,7 @@ export class SshSessionService {
     );
     sessionId = this.deps.pty.createRemote({ hostId: target.kind === 'host' ? target.hostId : null }, backend).id;
     this.targets.set(sessionId, target);
+    this.trim();
     this.setState(sessionId, 'connecting', null);
     void backend.start();
     return { sessionId, label };
@@ -56,6 +60,15 @@ export class SshSessionService {
     this.targets.delete(sessionId);
     this.states.delete(sessionId);
     return this.connect(target, cols, rows);
+  }
+
+  /** Destinos e etapas de sessões antigas ficam para "Reconectar"; além do limite, saem as mais antigas. */
+  private trim(): void {
+    for (const id of this.targets.keys()) {
+      if (this.targets.size <= MAX_REMEMBERED_SESSIONS) break;
+      this.targets.delete(id);
+      this.states.delete(id);
+    }
   }
 
   stateOf(sessionId: string): SshSessionState | null {

@@ -58,6 +58,8 @@ export class ProjectService {
           clearTimeout(state.timers.get(pkg.dir));
           state.timers.set(pkg.dir, setTimeout(() => void this.refreshPackage(projectId, pkg.dir), this.debounceMs));
         });
+        // Pasta do pacote removida: sem listener, o erro derrubaria o processo principal.
+        watcher.on('error', () => watcher.close());
         state.watchers.push(watcher);
       } catch {
         // pasta removida entre a varredura e o watch

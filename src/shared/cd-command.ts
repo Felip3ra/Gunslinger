@@ -28,6 +28,8 @@ export function toWslPath(windowsPath: string, info: WslPathInfo = { mountRoot: 
 }
 
 const shSingleQuote = (s: string): string => `'${s.replace(/'/g, `'\\''`)}'`;
+/** No fish, dentro de aspas simples só `\\` e `\'` são escapes. */
+export const fishQuote = (s: string): string => `'${s.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
 
 /**
  * Comando para trocar de pasta no shell informado, ou null quando o tipo de shell é desconhecido
@@ -45,6 +47,12 @@ export function buildCdCommand(shellType: ShellType, windowsPath: string, wsl?: 
       return `cd ${shSingleQuote(toMsysPath(windowsPath))}`;
     case 'wsl':
       return `cd ${shSingleQuote(toWslPath(windowsPath, wsl))}`;
+    case 'bash':
+    case 'zsh':
+      // Shells nativos do macOS e do Linux: o caminho já é o do sistema.
+      return `cd ${shSingleQuote(windowsPath)}`;
+    case 'fish':
+      return `cd ${fishQuote(windowsPath)}`;
     case 'custom':
       return null;
   }

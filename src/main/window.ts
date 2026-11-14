@@ -1,28 +1,9 @@
 import { join } from 'node:path';
 import { BrowserWindow, session, shell } from 'electron';
+import { DEV_CSP, PROD_CSP } from '@shared/csp';
 import icon from '../../resources/icon.png?asset';
 
 const isDev = !!process.env['ELECTRON_RENDERER_URL'];
-
-const PROD_CSP = [
-  "default-src 'self'",
-  "script-src 'self'",
-  // React e xterm.js usam estilos inline.
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data:",
-  "font-src 'self' data:",
-  "connect-src 'self'",
-  "object-src 'none'",
-  "base-uri 'none'",
-  "form-action 'none'",
-  "frame-ancestors 'none'",
-].join('; ');
-
-// O Vite em modo dev injeta scripts inline (preamble do React) e usa WebSocket para o HMR.
-const DEV_CSP = PROD_CSP.replace("script-src 'self'", "script-src 'self' 'unsafe-inline'").replace(
-  "connect-src 'self'",
-  "connect-src 'self' ws://localhost:* http://localhost:*",
-);
 
 export function installContentSecurityPolicy(): void {
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {

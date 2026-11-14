@@ -61,6 +61,11 @@ export class PluginService {
         if (this.timer) clearTimeout(this.timer);
         this.timer = setTimeout(() => void this.reload(), debounceMs);
       });
+      // Pasta removida: sem listener, o erro derrubaria o processo principal. "Recarregar" continua funcionando.
+      this.watcher.on('error', () => {
+        this.watcher?.close();
+        this.watcher = null;
+      });
     } catch {
       // Sem observação (pasta em rede, por exemplo): "Recarregar" continua funcionando.
     }

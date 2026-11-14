@@ -28,3 +28,39 @@ jobs:
       # Smoke e2e: abre a janela e um PTY real (valida node-pty/ConPTY no runtime do Electron).
       - run: npx playwright test
       - run: npx electron-builder --win --dir
+
+  linux:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Shells e ferramentas usados pelos testes
+        run: sudo apt-get update && sudo apt-get install -y zsh fish lsof xvfb
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - run: npx electron-builder --linux --dir
+      # Os demais testes e2e usam CMD e PowerShell; aqui rodam os de shells nativos e o do app empacotado.
+      - run: xvfb-run -a npx playwright test smoke posix packaged
+
+  macos:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - run: npx electron-builder --mac --dir
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - run: npx playwright test smoke posix packaged

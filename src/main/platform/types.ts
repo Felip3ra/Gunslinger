@@ -42,8 +42,17 @@ export interface PlatformAdapter {
   detectShells(env: Env): Promise<DetectedShell[]>;
   /** Shell usado quando a detecção não está disponível ou nenhum perfil existe. */
   fallbackShell(env: Env): DetectedShell;
-  /** Ambiente que um login novo teria (no Windows, lido do registro). */
+  /** Ambiente que um login novo teria (no Windows, lido do registro; nos demais, do shell de login). */
   readSystemEnvironment(current: Env): Promise<Env>;
+  /**
+   * Ambiente inicial do app. No macOS e no Linux, um app aberto pelo Dock ou pelo menu recebe só o
+   * ambiente mínimo do sistema (sem o PATH do perfil do usuário), então ele é lido do shell de login.
+   */
+  launchEnvironment(current: Env): Promise<Env>;
+  /** Socket (ou pipe) do agente SSH do sistema, ou null quando não há. */
+  sshAgentSocket(env: Env): string | null;
+  /** O app instalado consegue se atualizar sozinho nesta plataforma e forma de instalação. */
+  supportsAutoUpdate(env: Env): boolean;
   /** Conteúdo de `reg export` de uma chave (só Windows; null nas demais plataformas ou se não existir). */
   exportRegistryKey(key: string): Promise<string | null>;
   /** Caminho absoluto de um executável no PATH do ambiente informado, ou null. */

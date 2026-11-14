@@ -7,6 +7,9 @@ export const DEFAULT_COLORS: Record<ShellType, string> = {
   gitbash: '#3fb950',
   cmd: '#8b949e',
   wsl: '#e95420',
+  bash: '#3fb950',
+  zsh: '#f0883e',
+  fish: '#39c5cf',
   custom: '#a371f7',
 };
 
@@ -16,6 +19,9 @@ export const DEFAULT_ICONS: Record<ShellType, string> = {
   gitbash: 'builtin:git',
   cmd: 'builtin:cmd',
   wsl: 'builtin:linux',
+  bash: 'builtin:terminal',
+  zsh: 'builtin:terminal',
+  fish: 'builtin:terminal',
   custom: 'builtin:terminal',
 };
 

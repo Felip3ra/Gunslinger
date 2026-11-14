@@ -145,6 +145,13 @@ export class StatusService {
     } catch {
       // sem observação: o status ainda é atualizado por troca de pasta, aba e fim de comando
     }
+    // Pasta apagada ou inacessível: sem listener, o erro derrubaria o processo principal.
+    for (const w of repo.watchers) {
+      w.on('error', () => {
+        for (const other of repo.watchers) other.close();
+        repo.watchers = [];
+      });
+    }
   }
 
   /** No máximo uma consulta por repositório em andamento; pedidos que chegam no meio são agrupados. */

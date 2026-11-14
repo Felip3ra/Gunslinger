@@ -204,3 +204,31 @@ describe('ConfigStore: histórico', () => {
     expect(store.snapshot().commands.commands.map((c) => c.name)).toEqual(['Build']);
   });
 });
+
+describe('ConfigStore: gravações simultâneas', () => {
+  it('duas alterações de configuração feitas ao mesmo tempo ficam as duas gravadas', async () => {
+    const store = new ConfigStore(dir);
+    await store.load();
+    const results = await Promise.all([
+      store.updateSettings(['appearance', 'fontSize'], 18),
+      store.updateSettings(['appearance', 'scrollback'], 5000),
+    ]);
+    expect(results).toEqual([{ ok: true }, { ok: true }]);
+    const saved = JSON.parse(await read('settings.json'));
+    expect(saved.appearance.fontSize).toBe(18);
+    expect(saved.appearance.scrollback).toBe(5000);
+    expect(store.snapshot().settings.appearance).toMatchObject({ fontSize: 18, scrollback: 5000 });
+  });
+
+  it('duas mutações simultâneas do mesmo arquivo partem uma do resultado da outra', async () => {
+    const store = new ConfigStore(dir);
+    await store.load();
+    const identity = (id: string) => ({ id, name: id, username: id, passwordSecretId: `segredo-${id}` });
+    await Promise.all([
+      store.mutateKeychain((f) => ({ ...f, identities: [...f.identities, identity('a')] })),
+      store.mutateKeychain((f) => ({ ...f, identities: [...f.identities, identity('b')] })),
+    ]);
+    expect(store.keychainFile().identities.map((i) => i.id)).toEqual(['a', 'b']);
+    expect(JSON.parse(await read('keychain.json')).identities).toHaveLength(2);
+  });
+});

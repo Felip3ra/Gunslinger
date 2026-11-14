@@ -118,4 +118,17 @@ async function bootstrap(): Promise<void> {
   wireSessionSaving();
 }
 
-void bootstrap();
+bootstrap().catch((err: unknown) => {
+  // Sem isso a janela ficaria em branco, sem pista do que falhou.
+  console.error(err);
+  const root = document.getElementById('root');
+  if (!root || root.childElementCount > 0) return;
+  const box = document.createElement('div');
+  box.className = 'boot-error';
+  const title = document.createElement('h1');
+  title.textContent = 'O Gunslinger não pôde iniciar';
+  const detail = document.createElement('pre');
+  detail.textContent = err instanceof Error ? err.message : String(err);
+  box.append(title, detail);
+  root.append(box);
+});

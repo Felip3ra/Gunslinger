@@ -1,6 +1,6 @@
 # Gunslinger
 
-Terminal desktop para Windows (Electron + TypeScript + React + xterm.js + node-pty), com foco em .NET e Node.js. Planejamento em `openspec/` (change ativa: `openspec/changes/add-gunslinger-mvp`).
+Terminal desktop para Windows, com versões para Linux e macOS (Electron + TypeScript + React + xterm.js + node-pty), com foco em .NET e Node.js. Planejamento em `openspec/` (change ativa: `openspec/changes/add-gunslinger-mvp`).
 
 ## Comandos
 
@@ -10,6 +10,8 @@ Terminal desktop para Windows (Electron + TypeScript + React + xterm.js + node-p
 - `npm run test:e2e`: build + Playwright (`tests/e2e`), um worker
 - `npm run lint` / `npm run typecheck`
 - `npm run dist`: instalador NSIS em `dist/`
+- `npm run dist:linux` / `npm run dist:mac`: AppImage e .deb / .dmg. Só funcionam no próprio sistema (módulos nativos); no Windows, gere o Linux num contêiner (`mcr.microsoft.com/playwright:v1.48.2-jammy`) e o macOS pelo workflow de release.
+- Linux e macOS: `xvfb-run -a npx playwright test smoke posix packaged` (os demais e2e usam CMD e PowerShell).
 
 O VS Code define `ELECTRON_RUN_AS_NODE=1` no terminal integrado. Para rodar o app ou os testes e2e fora do helper `tests/e2e/helpers.ts`, remova essa variável.
 
@@ -21,7 +23,7 @@ Regra de dependência: de fora para dentro. `shared` não depende de nada; servi
 - `src/main`: processo principal. Único dono de PTY, sistema de arquivos, ambiente e configuração.
   - `services/` e módulos de recurso (`pty/`, `env/`, `shells/`, `config/`, `projects/`, `status/`, `transfer/`, `tools/`, `editor/`, `elevation/`, `tests/`, `history/`, `plugins/`, `update/`, `session/`, `ssh/`): **aplicação**. Dependem de `ports.ts`, nunca do Electron.
   - `ports.ts`: interfaces de diálogo, notificação, área de transferência, desktop e janela. `adapters/`: implementações Electron.
-  - `platform/`: `PlatformAdapter` (`win32.ts`, `posix.ts`). Só aqui é permitido testar `process.platform` (lint). `job-tracker.ts` + `win32-job-helper.ts`: grupo de processos por aba (Job Object via auxiliar em PowerShell).
+  - `platform/`: `PlatformAdapter` (`win32.ts`; `posix.ts` para Linux e macOS: shells em `shells/detect-posix.ts`, ambiente do shell de login, portas pelo `lsof`/`ss`). Só aqui é permitido testar `process.platform` (lint). `job-tracker.ts` + `win32-job-helper.ts`: grupo de processos por aba (Job Object via auxiliar em PowerShell).
   - `ipc/handlers/*.ts`: **entrada**, um arquivo por recurso; validam (zod, em `ipc/registry.ts`) e delegam a serviços, sem regra de negócio.
   - `composition.ts`: raiz de composição (instancia serviços e registra handlers). `index.ts`: ciclo de vida do app. `quit-flow.ts`: saída.
 - `src/preload`: expõe `window.gunslinger` via `contextBridge`, com lista branca de canais. Roda em sandbox.

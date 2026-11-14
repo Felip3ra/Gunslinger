@@ -206,3 +206,24 @@ describe('PtyManager: saída durante o encerramento', () => {
     expect(releases).toEqual([info.id]);
   });
 });
+
+describe('PtyManager: perfil de ambiente', () => {
+  it('PATH do perfil substitui o Path herdado, sem criar uma segunda chave', () => {
+    let spawned: Record<string, string> = {};
+    const custom = new PtyManager({
+      platform: { ...posixAdapter, listDescendants: async () => [] },
+      spawn: (_file, _args, options) => {
+        spawned = options.env;
+        return new FakePty() as unknown as IPty;
+      },
+      send: () => undefined,
+      resolveProfile: () => profile,
+      buildLaunch: (p, cwd) => ({ file: p.executable, args: [], cwd, env: { Path: 'C:/Windows', TEMP: 'C:/Temp' } }),
+      envGeneration: () => 0,
+      defaultCwd: () => 'C:/',
+      environmentVariables: () => ({ PATH: 'C:/tools', NODE_ENV: 'test' }),
+    });
+    custom.create({ profileId: profile.id, cols: 80, rows: 24, envProfileId: 'dev' });
+    expect(spawned).toEqual({ Path: 'C:/tools', TEMP: 'C:/Temp', NODE_ENV: 'test' });
+  });
+});

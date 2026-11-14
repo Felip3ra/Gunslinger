@@ -85,6 +85,13 @@ textarea:focus {
   background: var(--bg-elevated);
   border-bottom: 1px solid var(--border);
   min-height: 34px;
+}
+/* Só as abas rolam: os botões de nova aba e de configurações ficam sempre à vista. */
+.tabs {
+  display: flex;
+  align-items: stretch;
+  flex: 0 1 auto;
+  min-width: 0;
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -93,6 +100,9 @@ textarea:focus {
   align-items: center;
   gap: 6px;
   padding: 0 6px 0 10px;
+  /* Encolhem até o mínimo antes de a barra começar a rolar. */
+  flex: 0 1 auto;
+  min-width: 96px;
   max-width: 220px;
   border-right: 1px solid var(--border);
   border-top: 2px solid transparent;
@@ -106,6 +116,8 @@ textarea:focus {
   border-top-color: var(--tab-accent);
 }
 .tab-title {
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -127,7 +139,7 @@ textarea:focus {
   opacity: 1;
 }
 .newtab {
-  position: relative;
+  flex: none;
   display: flex;
   align-items: center;
   gap: 2px;
@@ -139,10 +151,12 @@ textarea:focus {
   padding: 2px 8px;
 }
 .menu {
+  /* Fixo na janela, na posição calculada pelo TabBar (abaixo dos botões de nova aba). */
   position: fixed;
   z-index: 20;
-  margin-top: 30px;
   min-width: 220px;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
   background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -396,6 +410,8 @@ textarea:focus {
 /* ---------- painel lateral ---------- */
 .sidebar {
   position: relative;
+  /* Rola só na vertical: textos longos são cortados com reticências em cada linha. */
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -412,8 +428,8 @@ textarea:focus {
 .sidebar-resizer {
   position: absolute;
   top: 0;
-  right: -3px;
-  width: 6px;
+  right: 0;
+  width: 5px;
   height: 100%;
   cursor: col-resize;
 }
@@ -439,6 +455,7 @@ textarea:focus {
   padding: 4px;
 }
 .command-row {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -474,10 +491,22 @@ textarea:focus {
   color: var(--warning);
   margin-right: 4px;
 }
-/* Escondidas só visualmente: continuam acessíveis por teclado e leitores de tela. */
+/*
+ * Escondidas só visualmente: continuam acessíveis por teclado e leitores de tela.
+ * Ficam sobre o fim da linha, sem reservar largura: o nome usa a linha inteira e só é coberto
+ * enquanto as ações aparecem.
+ */
 .command-actions {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 4px;
   display: flex;
+  align-items: center;
   gap: 2px;
+  padding-left: 6px;
+  background: var(--bg-hover);
+  box-shadow: -8px 0 8px var(--bg-hover);
   opacity: 0;
 }
 .command-row:hover .command-actions,
@@ -723,11 +752,14 @@ kbd {
 }
 .settings-tabs {
   display: flex;
+  /* Em janela estreita as abas passam para outra linha, sem quebrar os rótulos nem criar rolagem lateral. */
+  flex-wrap: wrap;
   gap: 4px;
   margin: 8px 0 12px;
   border-bottom: 1px solid var(--border);
 }
 .settings-tabs button {
+  white-space: nowrap;
   border: none;
   border-bottom: 2px solid transparent;
   border-radius: 0;
@@ -739,7 +771,7 @@ kbd {
 }
 .color-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 6px;
 }
 .color-field {
@@ -1044,8 +1076,6 @@ img.profile-icon {
 
 /* ---------- botão de configurações (fixo à direita da barra de abas) ---------- */
 .tabbar-settings {
-  position: sticky;
-  right: 0;
   margin-left: auto;
   display: flex;
   align-items: center;
@@ -1175,4 +1205,21 @@ button.danger {
 .keychain-form textarea {
   font-family: var(--mono, Consolas, monospace);
   font-size: 11px;
+}
+
+/* Falha antes de o React montar (ver main.tsx). */
+.boot-error {
+  padding: 32px;
+  color: #e6edf3;
+  font-family: system-ui, sans-serif;
+}
+.boot-error h1 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 12px;
+}
+.boot-error pre {
+  white-space: pre-wrap;
+  color: #f85149;
+  margin: 0;
 }

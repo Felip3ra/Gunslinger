@@ -128,6 +128,8 @@ export class ConfigStore {
   private watcher: FSWatcher | null = null;
   private state: UiState = clone(defaultUiState);
   private stateWrite: Promise<void> = Promise.resolve();
+  /** Gravações em fila: cada uma parte do resultado da anterior (sem atualização perdida nem disputa pelo .tmp). */
+  private writeQueue: Promise<unknown> = Promise.resolve();
 
   constructor(
     readonly dir: string,
@@ -305,7 +307,18 @@ export class ConfigStore {
     };
   }
 
-  async updateSettings(path: (string | number)[], value: unknown): Promise<SaveResult> {
+  /** Executa uma gravação depois das que já estão na fila. */
+  private serial<T>(fn: () => Promise<T>): Promise<T> {
+    const next = this.writeQueue.then(fn, fn);
+    this.writeQueue = next.catch(() => undefined);
+    return next;
+  }
+
+  updateSettings(path: (string | number)[], value: unknown): Promise<SaveResult> {
+    return this.serial(() => this.updateSettingsNow(path, value));
+  }
+
+  private async updateSettingsNow(path: (string | number)[], value: unknown): Promise<SaveResult> {
     const blocked = this.blocked('settings');
     if (blocked) return blocked;
     const file = this.files.get('settings')!;
@@ -346,7 +359,11 @@ export class ConfigStore {
     return this.mutateJson('knownHosts', knownHostsFileSchema, fn);
   }
 
-  private async mutateJson<T>(name: ConfigFileName, schema: ZodTypeAny, fn: (file: T) => T): Promise<SaveResult> {
+  private mutateJson<T>(name: ConfigFileName, schema: ZodTypeAny, fn: (file: T) => T): Promise<SaveResult> {
+    return this.serial(() => this.mutateJsonNow(name, schema, fn));
+  }
+
+  private async mutateJsonNow<T>(name: ConfigFileName, schema: ZodTypeAny, fn: (file: T) => T): Promise<SaveResult> {
     const blocked = this.blocked(name);
     if (blocked) return blocked;
     const file = this.files.get(name)!;
@@ -384,7 +401,11 @@ export class ConfigStore {
    * Substitui os arquivos pelos textos dados (restauração explícita do usuário). Valida todos antes de
    * gravar qualquer um; pode substituir um arquivo inválido, cujo conteúdo fica no `.bak`.
    */
-  async restoreFiles(texts: Partial<Record<ConfigFileName, string>>): Promise<SaveResult> {
+  restoreFiles(texts: Partial<Record<ConfigFileName, string>>): Promise<SaveResult> {
+    return this.serial(() => this.restoreFilesNow(texts));
+  }
+
+  private async restoreFilesNow(texts: Partial<Record<ConfigFileName, string>>): Promise<SaveResult> {
     const parsed: [ConfigFileName, string, FileState][] = [];
     for (const [name, text] of Object.entries(texts) as [ConfigFileName, string][]) {
       const def = FILES[name];
@@ -427,6 +448,8 @@ export class ConfigStore {
       clearTimeout(this.timers.get(def.name));
       this.timers.set(def.name, setTimeout(() => void this.reloadFromDisk(def), debounceMs));
     });
+    // Pasta removida ou inacessível: sem listener, o erro derrubaria o processo principal.
+    this.watcher.on('error', () => this.stopWatching());
   }
 
   stopWatching(): void {

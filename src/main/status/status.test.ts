@@ -1,3 +1,4 @@
+import { join, parse } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { parseGitStatusV2 } from './git-parse';
 import { findRelevance } from './relevance';
@@ -23,12 +24,17 @@ describe('parseGitStatusV2', () => {
 });
 
 describe('findRelevance', () => {
+  // Caminhos do sistema em que o teste roda (C:\\src\\Loja no Windows, /src/Loja nos demais).
+  const root = parse(process.cwd()).root;
+  const src = join(root, 'src');
+  const loja = join(src, 'Loja');
+  const frontend = join(loja, 'frontend');
   const tree: Record<string, string[]> = {
-    'C:\\src\\Loja\\frontend\\src': ['App.tsx'],
-    'C:\\src\\Loja\\frontend': ['package.json', 'src'],
-    'C:\\src\\Loja': ['Loja.sln', 'frontend'],
-    'C:\\src': [],
-    'C:\\': [],
+    [join(frontend, 'src')]: ['App.tsx'],
+    [frontend]: ['package.json', 'src'],
+    [loja]: ['Loja.sln', 'frontend'],
+    [src]: [],
+    [root]: [],
   };
   const list = async (d: string): Promise<string[]> => {
     const entries = tree[d];
@@ -37,10 +43,10 @@ describe('findRelevance', () => {
   };
 
   it('acha os marcadores mais próximos subindo a árvore', async () => {
-    expect(await findRelevance('C:\\src\\Loja\\frontend\\src', list)).toEqual({ nodeDir: 'C:\\src\\Loja\\frontend', dotnetDir: 'C:\\src\\Loja' });
+    expect(await findRelevance(join(frontend, 'src'), list)).toEqual({ nodeDir: frontend, dotnetDir: loja });
   });
 
   it('pasta sem relação com Node nem .NET', async () => {
-    expect(await findRelevance('C:\\src', list)).toEqual({ nodeDir: null, dotnetDir: null });
+    expect(await findRelevance(src, list)).toEqual({ nodeDir: null, dotnetDir: null });
   });
 });

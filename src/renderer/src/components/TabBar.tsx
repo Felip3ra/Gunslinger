@@ -5,7 +5,10 @@ import { closeGroup, displayPane, openTab, profileName } from '../tabs';
 import { canElevate, openElevated } from '../elevation';
 import { ProfileIcon } from './ProfileIcon';
 
-function NewTabMenu({ onClose }: { onClose: () => void }): JSX.Element {
+/** Largura mínima do menu (ver `.menu` no CSS), para ele não sair pela borda direita da janela. */
+const MENU_MIN_WIDTH = 220;
+
+function NewTabMenu({ anchor, onClose }: { anchor: { left: number; top: number }; onClose: () => void }): JSX.Element {
   const allProfiles = useStore((s) => s.profiles);
   const profiles = useMemo(() => allProfiles.filter((p) => !p.hidden), [allProfiles]);
   const ref = useRef<HTMLDivElement>(null);
@@ -25,7 +28,7 @@ function NewTabMenu({ onClose }: { onClose: () => void }): JSX.Element {
   }, [onClose]);
 
   return (
-    <div className="menu" ref={ref} role="menu" data-testid="new-tab-menu">
+    <div className="menu" ref={ref} role="menu" data-testid="new-tab-menu" style={{ left: anchor.left, top: anchor.top }}>
       {profiles.map((p) => (
         <div key={p.id} className="menu-row">
           <button
@@ -71,11 +74,36 @@ export function TabBar(): JSX.Element {
   const hostList = useStore((s) => s.config?.hosts.hosts ?? EMPTY);
   const hostsById = useMemo(() => new Map(hostList.map((h) => [h.id, h])), [hostList]);
   const activate = useStore((s) => s.activate);
-  const [menuOpen, setMenuOpen] = useState(false);
+  // Posição do menu de perfis: logo abaixo dos botões de nova aba (o menu é fixo na janela, porque
+  // dentro da barra ele seria cortado).
+  const [menuAnchor, setMenuAnchor] = useState<{ left: number; top: number } | null>(null);
+  const newTabRef = useRef<HTMLDivElement>(null);
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const toggleMenu = (): void => {
+    const rect = newTabRef.current?.getBoundingClientRect();
+    setMenuAnchor((current) =>
+      current || !rect
+        ? null
+        : { left: Math.max(4, Math.min(rect.left, window.innerWidth - MENU_MIN_WIDTH - 8)), top: rect.bottom + 2 },
+    );
+  };
+  // Com muitas abas a barra rola: a aba ativa (nova ou escolhida pelo teclado) é trazida para a área visível.
+  useEffect(() => {
+    tabsRef.current?.querySelector('.tab.active')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }, [activeKey, groups.length]);
   const settingsShortcut = useStore((s) => s.config?.settings.keybindings['settings.open'] ?? null);
 
   return (
-    <div className="tabbar" role="tablist">
+    <div className="tabbar">
+      <div
+        className="tabs"
+        role="tablist"
+        ref={tabsRef}
+        onWheel={(e) => {
+          // A roda do mouse (vertical) percorre as abas quando elas não cabem.
+          if (e.deltaY !== 0) e.currentTarget.scrollLeft += e.deltaY;
+        }}
+      >
       {groups.map((group) => {
         const panes = panesOf(group.root);
         const tab = tabs.find((t) => t.key === displayPane(group));
@@ -132,14 +160,15 @@ export function TabBar(): JSX.Element {
           </div>
         );
       })}
-      <div className="newtab">
+      </div>
+      <div className="newtab" ref={newTabRef}>
         <button className="newtab-button" aria-label="Nova aba" title="Nova aba" onClick={() => void openTab()}>
           +
         </button>
-        <button className="newtab-button" aria-label="Escolher perfil" title="Escolher perfil" data-testid="new-tab-menu-button" onClick={() => setMenuOpen((v) => !v)}>
+        <button className="newtab-button" aria-label="Escolher perfil" title="Escolher perfil" data-testid="new-tab-menu-button" onClick={toggleMenu}>
           ▾
         </button>
-        {menuOpen && <NewTabMenu onClose={() => setMenuOpen(false)} />}
+        {menuAnchor && <NewTabMenu anchor={menuAnchor} onClose={() => setMenuAnchor(null)} />}
       </div>
       <button
         className="tabbar-settings"

@@ -23,9 +23,26 @@ export async function writeFileAtomic(path: string, content: string, options: { 
     }
   }
   try {
-    await rename(tmp, path);
+    await renameWithRetry(tmp, path);
   } catch (err) {
     await rm(tmp, { force: true });
     throw err;
+  }
+}
+
+/** Códigos que o Windows devolve enquanto outro programa (antivírus, editor) segura o arquivo. */
+const TRANSIENT = new Set(['EPERM', 'EBUSY', 'EACCES']);
+const RENAME_RETRY_DELAYS_MS = [20, 50, 100, 200];
+
+async function renameWithRetry(from: string, to: string): Promise<void> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      await rename(from, to);
+      return;
+    } catch (err) {
+      const delay = RENAME_RETRY_DELAYS_MS[attempt];
+      if (delay === undefined || !TRANSIENT.has((err as NodeJS.ErrnoException).code ?? '')) throw err;
+      await new Promise((r) => setTimeout(r, delay));
+    }
   }
 }

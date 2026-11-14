@@ -35,7 +35,7 @@ export function installQuitFlow(win: BrowserWindow, services: AppServices): Quit
       closing = true;
       services.dispose();
       const killed = await Promise.race([
-        services.pty.killAll(),
+        Promise.all([services.pty.killAll(), services.cancelTests().catch(() => undefined)]).then(([result]) => result),
         new Promise<KillResult>((r) => setTimeout(() => r({ token: null, detached: [] }), QUIT_KILL_TIMEOUT_MS)),
       ]);
       if (killed.token) {

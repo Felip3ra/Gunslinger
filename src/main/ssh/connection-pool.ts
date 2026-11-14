@@ -21,6 +21,8 @@ export interface PoolDeps {
   prompts: Pick<PromptBroker, 'ask' | 'cancelGroup'>;
   /** Liga ao host a identidade criada ao salvar a senha. */
   linkIdentity(hostId: string, identityId: string): Promise<SaveResult>;
+  /** Agente SSH do sistema (padrão: o pipe do OpenSSH para Windows). */
+  systemAgent?: () => string | null;
 }
 
 /** Falha ao conectar, com a mensagem já em português. */
@@ -246,7 +248,7 @@ class ConnectAttempt {
     this.label = formatTarget(username, spec.address, spec.port);
     const keyId = spec.keyId ?? identity?.keyId ?? null;
     const settings = deps.settings();
-    const agent = agentPath(settings.agent);
+    const agent = deps.systemAgent ? agentPath(settings.agent, deps.systemAgent()) : agentPath(settings.agent);
 
     const client = deps.createClient();
     this.onStage('connecting', null);

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { fishQuote } from './cd-command';
 import type { ShellType } from './model/profiles';
 
 const VAR_NAME = /^[A-Za-z_][A-Za-z0-9_]*$/;
@@ -28,7 +29,11 @@ export function envCommands(shellType: ShellType, variables: Record<string, stri
       return entries.map(([n, v]) => `$env:${n} = ${ps(v)}`);
     case 'gitbash':
     case 'wsl':
+    case 'bash':
+    case 'zsh':
       return entries.map(([n, v]) => `export ${n}=${sh(v)}`);
+    case 'fish':
+      return entries.map(([n, v]) => `set -gx ${n} ${fishQuote(v)}`);
     case 'custom':
       return null;
   }

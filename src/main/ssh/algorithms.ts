@@ -15,8 +15,9 @@ export const SSH_ALGORITHMS = {
 /** Pipe do agente do OpenSSH para Windows (serviço ssh-agent). */
 export const OPENSSH_AGENT_PIPE = '\\\\.\\pipe\\openssh-ssh-agent';
 
-export function agentPath(setting: 'off' | 'openssh' | 'pageant'): string | null {
-  if (setting === 'openssh') return OPENSSH_AGENT_PIPE;
+/** `system`: agente do sistema (pipe do OpenSSH no Windows; SSH_AUTH_SOCK no macOS e no Linux, ou null sem agente). */
+export function agentPath(setting: 'off' | 'openssh' | 'pageant', system: string | null = OPENSSH_AGENT_PIPE): string | null {
+  if (setting === 'openssh') return system;
   if (setting === 'pageant') return 'pageant';
   return null;
 }

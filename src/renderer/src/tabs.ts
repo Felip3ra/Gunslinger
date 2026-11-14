@@ -13,6 +13,8 @@ const ELEVATION_CANCEL_WINDOW_MS = 3000;
 const earlyData = new Map<string, string[]>();
 /** Fim de sessão que chegou antes de o renderer saber de qual aba ela é (conexão SSH recusada na hora). */
 const earlyExit = new Map<string, number>();
+/** Sessões que a aba largou (fechada, reiniciada): a saída e o fim que ainda chegarem são descartados. */
+const discarded = new Set<string>();
 const nextFrame = (): Promise<void> => new Promise((r) => requestAnimationFrame(() => r()));
 
 function tabBySession(sessionId: string): Tab | undefined {
@@ -43,8 +45,23 @@ function onCommandEnd(key: string, event: CommandEvent): void {
   }
 }
 
-/** Liga a sessão à aba e entrega o que chegou antes (saída e, em SSH, o fim da sessão). */
-function adoptSession(key: string, sessionId: string): void {
+/** A aba não quer mais a sessão: nada do que ela ainda enviar é guardado. */
+function discardSession(sessionId: string): void {
+  earlyData.delete(sessionId);
+  // Já terminou: não vem mais nada. Senão, o `pty:exit` dela tira a marca.
+  if (!earlyExit.delete(sessionId)) discarded.add(sessionId);
+}
+
+/**
+ * Liga a sessão à aba e entrega o que chegou antes (saída e, em SSH, o fim da sessão).
+ * Se a aba foi fechada enquanto a sessão era criada, encerra a sessão (ficaria sem dono) e devolve false.
+ */
+function adoptSession(key: string, sessionId: string): boolean {
+  if (!useStore.getState().tabs.some((t) => t.key === key)) {
+    discardSession(sessionId);
+    api.invoke('pty:kill', { sessionId }).catch(() => undefined);
+    return false;
+  }
   terminals.setSession(key, sessionId);
   for (const chunk of earlyData.get(sessionId) ?? []) terminals.write(key, chunk);
   earlyData.delete(sessionId);
@@ -53,6 +70,7 @@ function adoptSession(key: string, sessionId: string): void {
     earlyExit.delete(sessionId);
     handleExit(sessionId, exit);
   }
+  return true;
 }
 
 async function startSession(key: string, profileId: string, cwd?: string, projectId?: string | null, elevated = false, envProfileId?: string | null): Promise<void> {
@@ -200,6 +218,7 @@ export async function closeTab(key: string): Promise<void> {
     // Remove a sessão da aba antes do kill, para ignorar o pty:exit que o kill dispara.
     const sessionId = tab.sessionId;
     useStore.getState().updateTab(key, { sessionId: null });
+    discardSession(sessionId);
     const killed = await api.invoke('pty:kill', { sessionId });
     // Pergunta antes de descartar a aba: se era a última, o app fecha em seguida.
     if (killed.token) await askDetached(killed.token, killed.detached);
@@ -232,6 +251,7 @@ export async function restartTab(key: string): Promise<void> {
     if (tab.sessionId) {
       const old = tab.sessionId;
       useStore.getState().updateTab(key, { sessionId: null });
+      discardSession(old);
       await api.invoke('pty:kill', { sessionId: old }).catch(() => undefined);
     }
     await connectSsh(key);
@@ -242,6 +262,7 @@ export async function restartTab(key: string): Promise<void> {
     // Aba viva (ambiente desatualizado): o main encerra e recria a sessão.
     const old = tab.sessionId;
     useStore.getState().updateTab(key, { sessionId: null, status: 'starting' });
+    discardSession(old);
     terminals.reset(key);
     const dims = terminals.dimensions(key);
     try {
@@ -313,6 +334,7 @@ export function wirePtyEvents(): void {
   });
 
   api.on('pty:data', ({ sessionId, data }) => {
+    if (discarded.has(sessionId)) return;
     const tab = tabBySession(sessionId);
     if (tab) terminals.write(tab.key, data);
     else {
@@ -323,6 +345,7 @@ export function wirePtyEvents(): void {
   });
 
   api.on('pty:exit', ({ sessionId, exitCode }) => {
+    if (discarded.delete(sessionId)) return;
     if (tabBySession(sessionId)) handleExit(sessionId, exitCode);
     else earlyExit.set(sessionId, exitCode);
   });

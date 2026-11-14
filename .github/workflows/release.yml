@@ -2,7 +2,8 @@ name: Release
 
 # Publica uma versão: crie e envie uma tag igual à versão do package.json.
 #   npm version 0.2.0 && git push --follow-tags
-# O instalador e o latest.yml (lido pela atualização automática) vão para a release da tag.
+# Os instaladores de Windows, Linux e macOS e os latest*.yml (lidos pela atualização automática) vão
+# para a release da tag. Cada sistema é empacotado no próprio sistema (módulos nativos).
 on:
   push:
     tags: ['v*']
@@ -40,4 +41,54 @@ jobs:
       - name: Instalador e publicação
         run: npx electron-builder --win --publish always
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  linux:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Shells e ferramentas usados pelos testes
+        run: sudo apt-get update && sudo apt-get install -y zsh fish lsof xvfb
+      # O npm ci compila o node-pty (não há binário pré-compilado para Linux).
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - name: AppImage e .deb
+        run: npx electron-builder --linux --publish never
+      # O app empacotado abre um terminal de verdade antes de ir para a release.
+      - run: xvfb-run -a npx playwright test smoke posix packaged
+      - name: Publicação
+        run: npx electron-builder --linux --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  macos:
+    # Apple Silicon; o .dmg para Intel (x64) sai do mesmo runner, com os binários pré-compilados do node-pty.
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - name: .dmg (arm64 e x64)
+        run: npx electron-builder --mac --publish never
+        env:
+          # Sem certificado: o electron-builder não deve procurar um no chaveiro do runner.
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - run: npx playwright test smoke posix packaged
+      - name: Publicação
+        run: npx electron-builder --mac --publish always
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
