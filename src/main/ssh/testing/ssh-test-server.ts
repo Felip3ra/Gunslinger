@@ -30,9 +30,17 @@ export interface TestServer {
   close(): Promise<void>;
 }
 
+/** Chave do servidor de teste; o ssh2 às vezes gera uma Ed25519 que ele mesmo não lê (ver generateKey). */
+function generateHostKey(): string {
+  for (;;) {
+    const key = utils.generateKeyPairSync('ed25519').private;
+    if (!(utils.parseKey(key) instanceof Error)) return key;
+  }
+}
+
 export async function startTestServer(options: TestServerOptions = {}): Promise<TestServer> {
   const username = options.username ?? 'deploy';
-  const hostKey = options.hostKey ?? utils.generateKeyPairSync('ed25519').private;
+  const hostKey = options.hostKey ?? generateHostKey();
   const authorized = options.authorizedKey ? utils.parseKey(options.authorizedKey) : null;
   const authAttempts: string[] = [];
   const received: string[] = [];

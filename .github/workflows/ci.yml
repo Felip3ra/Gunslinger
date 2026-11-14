@@ -43,11 +43,18 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: npx electron-builder --linux --dir
+      # Sem user namespaces liberados, o Electron exige o chrome-sandbox do root com SUID (o .deb faz isso
+      # ao instalar); sem isso ele aborta em vez de rodar sem sandbox.
+      - name: Sandbox do Electron
+        run: |
+          for f in node_modules/electron/dist/chrome-sandbox dist/linux-unpacked/chrome-sandbox; do
+            sudo chown root:root "$f" && sudo chmod 4755 "$f"
+          done
       # Os demais testes e2e usam CMD e PowerShell; aqui rodam os de shells nativos e o do app empacotado.
       - run: xvfb-run -a npx playwright test smoke posix packaged
 
   macos:
-    runs-on: macos-14
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

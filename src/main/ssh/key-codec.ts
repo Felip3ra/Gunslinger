@@ -92,8 +92,12 @@ export interface GeneratedKey {
 export function generateKey(type: 'ed25519' | 'rsa', options: { comment: string; passphrase?: string }): GeneratedKey {
   const passphrase = options.passphrase || undefined;
   const common = { comment: options.comment, ...(passphrase ? { passphrase, cipher: 'aes256-ctr', rounds: 16 } : {}) };
-  const pair = type === 'rsa' ? utils.generateKeyPairSync('rsa', { ...common, bits: 4096 }) : utils.generateKeyPairSync('ed25519', common);
-  const parsed = parsePrivateKey(pair.private, passphrase);
-  if (!parsed.ok) throw new Error('Falha ao gerar a chave.');
-  return { privateKey: pair.private, parsed: { ...parsed.key, encrypted: !!passphrase } };
+  // O ssh2 às vezes gera uma chave Ed25519 que ele mesmo não consegue ler (cerca de 1 em 300):
+  // a chave é conferida e, nesse caso, gerada de novo.
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const pair = type === 'rsa' ? utils.generateKeyPairSync('rsa', { ...common, bits: 4096 }) : utils.generateKeyPairSync('ed25519', common);
+    const parsed = parsePrivateKey(pair.private, passphrase);
+    if (parsed.ok) return { privateKey: pair.private, parsed: { ...parsed.key, encrypted: !!passphrase } };
+  }
+  throw new Error('Falha ao gerar a chave.');
 }

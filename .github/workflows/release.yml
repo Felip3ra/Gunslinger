@@ -44,6 +44,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   linux:
+    # Depois do Windows: a release é criada uma vez só e os outros sistemas acrescentam os arquivos.
+    needs: windows
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
@@ -59,6 +61,13 @@ jobs:
       - run: npm run build
       - name: AppImage e .deb
         run: npx electron-builder --linux --publish never
+      # Sem user namespaces liberados, o Electron exige o chrome-sandbox do root com SUID (o .deb faz isso
+      # ao instalar); sem isso ele aborta em vez de rodar sem sandbox.
+      - name: Sandbox do Electron
+        run: |
+          for f in node_modules/electron/dist/chrome-sandbox dist/linux-unpacked/chrome-sandbox; do
+            sudo chown root:root "$f" && sudo chmod 4755 "$f"
+          done
       # O app empacotado abre um terminal de verdade antes de ir para a release.
       - run: xvfb-run -a npx playwright test smoke posix packaged
       - name: Publicação
@@ -67,8 +76,9 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   macos:
-    # Apple Silicon; o .dmg para Intel (x64) sai do mesmo runner, com os binários pré-compilados do node-pty.
-    runs-on: macos-14
+    # Apple Silicon (macos-latest); o .dmg para Intel (x64) sai do mesmo runner, com os binários pré-compilados do node-pty.
+    needs: windows
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
