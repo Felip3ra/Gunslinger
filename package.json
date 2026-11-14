@@ -1,7 +1,7 @@
 {
   "name": "gunslinger",
   "productName": "Gunslinger",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Terminal desktop personalizável para Windows, macOS e Linux, com foco em .NET e Node.js",
   "homepage": "https://gunslinger.vercel.app",
   "main": "out/main/index.js",
