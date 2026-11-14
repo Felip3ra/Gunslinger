@@ -47,4 +47,4 @@ npx vercel        # primeira vez: cria e liga o projeto
 npx vercel --prod
 ```
 
-Depois do primeiro deploy, troque `https://gunslinger.vercel.app` em `og:image` (`index.html` e `manual.html`) pelo domínio que a Vercel atribuir.
+O site fica em `https://gunslinger-site.vercel.app` (projeto `gunslinger-site` na Vercel, publicado a cada push no `main`). Se o domínio mudar, troque-o em `og:image` (`index.html` e `manual.html`) e em `homepage` no `package.json`.
