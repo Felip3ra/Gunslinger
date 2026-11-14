@@ -17,8 +17,34 @@
       .then(function (release) {
         if (!release || !release.tag_name) return;
         setText('[data-version]', release.tag_name.replace(/^v/, ''));
-        var setup = (release.assets || []).filter(function (a) { return a.name === 'Gunslinger-Setup.exe'; })[0];
-        if (setup) setText('[data-size]', Math.round(setup.size / 1000000) + ' MB');
+        var assets = {};
+        (release.assets || []).forEach(function (a) { assets[a.name] = a; });
+        var megabytes = function (asset) { return Math.round(asset.size / 1000000) + ' MB'; };
+        if (assets['Gunslinger-Setup.exe']) setText('[data-size]', megabytes(assets['Gunslinger-Setup.exe']));
+
+        // Linux e macOS: cada botão aponta para um arquivo da release e só aparece se ele existir.
+        var available = {};
+        all('[data-asset]').forEach(function (link) {
+          var asset = assets[link.getAttribute('data-asset')];
+          if (!asset) { link.hidden = true; return; }
+          link.href = asset.browser_download_url;
+          link.setAttribute('rel', 'noopener');
+          var size = link.querySelector('[data-asset-size]');
+          if (size) size.textContent = megabytes(asset);
+          var block = link.closest('[data-platform]');
+          if (block) { block.hidden = false; available[block.getAttribute('data-platform')] = true; }
+        });
+        if (!available.linux && !available.mac) return;
+        all('[data-multi]').forEach(function (el) { el.hidden = false; });
+        all('[data-winonly]').forEach(function (el) { el.hidden = true; });
+
+        // Botão do topo: em Linux e macOS leva à seção de download (há mais de um arquivo por sistema).
+        var ua = navigator.userAgent || '';
+        var os = /Mac OS X|Macintosh/.test(ua) ? 'mac' : /Linux|X11/.test(ua) && !/Android/.test(ua) ? 'linux' : 'windows';
+        if (os !== 'windows' && available[os]) {
+          all('[data-hero-download]').forEach(function (a) { a.href = '#download'; a.removeAttribute('rel'); });
+          setText('[data-hero-label]', os === 'mac' ? 'Baixar para macOS' : 'Baixar para Linux');
+        }
       })
       .catch(function () {});
   }

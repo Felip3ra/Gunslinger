@@ -105,6 +105,15 @@ h2 { font-size: clamp(28px, 4vw, 40px); letter-spacing: -.03em; line-height: 1.1
 .dl .sub { margin-bottom: 28px; }
 .dl > img { width: 200px; height: auto; }
 .req { margin-top: 22px; font-size: 13px; color: var(--muted); max-width: 640px; }
+.req + .req { margin-top: 8px; }
+.dl .sub a { text-decoration: underline; text-underline-offset: 3px; }
+.platforms { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
+.platform { border: 1px solid var(--line); border-radius: var(--radius); background: #ffffff06; padding: 18px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+.platform h3 { margin: 0; font-size: 16px; }
+.platform p { margin: 0; font-size: 13px; color: var(--muted); }
+.platform .btn { padding: 11px 16px; font-size: 14px; white-space: nowrap; }
+.platform .btn small { font-weight: 500; opacity: .75; }
+[hidden] { display: none !important; }
 
 /* FAQ */
 details { border-bottom: 1px solid var(--line); padding: 18px 0; }
@@ -137,9 +146,14 @@ footer .wrap { display: flex; justify-content: space-between; align-items: cente
 .doc h2 { font-size: 26px; margin: 56px 0 12px; padding-top: 8px; scroll-margin-top: 80px; }
 .doc h3 { font-size: 18px; margin: 28px 0 8px; }
 .doc p, .doc li { color: #d8d1c6; }
-.doc ul { padding-left: 22px; }
+.doc ul, .doc ol { padding-left: 22px; }
+.doc ol > li { margin: 8px 0; padding-left: 4px; }
+.doc ol > li::marker { color: var(--accent); font-weight: 700; }
+.doc li > pre { margin: 10px 0 4px; }
 .doc li { margin: 4px 0; }
 .doc .shot { margin: 22px 0; }
+.doc .shot a { display: block; cursor: zoom-in; }
+.doc p a, .doc li a, .doc td a { color: var(--gold); text-decoration: underline; text-underline-offset: 3px; }
 .doc pre { background: #05070b; border: 1px solid var(--line); border-radius: 12px; padding: 16px; overflow-x: auto; font-size: 13px; line-height: 1.55; }
 .doc pre code { background: none; padding: 0; font-size: inherit; }
 .doc table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14.5px; }
@@ -147,6 +161,11 @@ footer .wrap { display: flex; justify-content: space-between; align-items: cente
 .doc th { color: var(--muted); font-weight: 600; }
 .note { border: 1px solid #f59a2e44; background: #f59a2e0f; border-radius: 12px; padding: 14px 16px; margin: 18px 0; }
 .note p { margin: 0; }
+.example { border: 1px solid var(--line); border-left: 3px solid var(--accent); background: var(--bg-2); border-radius: 12px; padding: 16px 18px; margin: 20px 0; }
+.example > strong { display: block; margin-bottom: 6px; }
+.example > :last-child { margin-bottom: 0; }
+.example table { margin: 8px 0 4px; }
+.example td, .example th { vertical-align: top; }
 
 @media (max-width: 900px) {
   .hero { grid-template-columns: 1fr; padding-top: 44px; text-align: center; }

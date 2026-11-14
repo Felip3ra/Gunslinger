@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, rmdirSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { expect, test, type ElectronApplication, type Page } from '@playwright/test';
+import { startTestServer } from '../../src/main/ssh/testing/ssh-test-server';
 import { launchApp } from '../../tests/e2e/helpers';
 
 const SITE = resolve('site');
@@ -149,7 +150,10 @@ function createDemo(): string {
     JSON.stringify({
       version: 1,
       commands: [
-        cmd('g1', 'Trocar de branch', 'git checkout {branch}', 'Git', 'Pede o nome da branch'),
+        {
+          ...cmd('g1', 'Trocar de branch', 'git checkout {branch}', 'Git', 'Pede o nome da branch'),
+          variables: { branch: { label: 'Branch', default: 'main', options: ['main', 'develop', 'feature/pedidos'] } },
+        },
         cmd('g2', 'Atualizar main', 'git pull --rebase origin main', 'Git'),
         cmd('d1', 'Subir banco', 'docker compose up -d db', 'Docker'),
         cmd('d2', 'Derrubar tudo', 'docker compose down', 'Docker'),
@@ -172,6 +176,36 @@ function createDemo(): string {
           node: { packageManagerOverrides: {} },
         },
       ],
+    }),
+  );
+  // Hosts SSH de exemplo (endereços fictícios): dois grupos com padrões herdados e um host de salto.
+  file(
+    join(userData, 'hosts.json'),
+    JSON.stringify({
+      version: 1,
+      groups: [
+        { id: 'prd', name: 'Produção', parentId: null, defaults: { username: 'ops', port: 2222 } },
+        { id: 'hml', name: 'Homologação', parentId: null, defaults: { username: 'deploy' } },
+      ],
+      hosts: [
+        { id: 'bastion', name: 'Bastion', address: 'bastion.loja.example', groupId: 'prd', color: '#f85149', tags: ['salto'] },
+        { id: 'api-prd', name: 'API', address: '10.20.0.11', groupId: 'prd', color: '#f85149', tags: ['api'], jumpHostId: 'bastion' },
+        { id: 'db-prd', name: 'Banco', address: '10.20.0.12', groupId: 'prd', color: '#f85149', tags: ['db'], jumpHostId: 'bastion' },
+        { id: 'api-hml', name: 'Homolog API', address: 'hml.loja.example', groupId: 'hml', color: '#d29922', tags: ['api'] },
+      ],
+    }),
+  );
+  // Plugin de exemplo (o mesmo do manual).
+  file(
+    join(userData, 'plugins', 'kit-loja', 'plugin.json'),
+    JSON.stringify({
+      id: 'kit-loja',
+      name: 'Kit Loja',
+      version: '1.0.0',
+      contributes: {
+        commands: [{ id: 'seed', name: 'Popular banco', command: 'dotnet run --project tools/Seed', category: 'Kit Loja' }],
+        workspaces: [{ id: 'full', name: 'Loja completa', tabs: [{ type: 'pane', pane: { command: 'npm run dev' } }] }],
+      },
     }),
   );
   return userData;
@@ -289,6 +323,34 @@ test('gera logo, imagem de compartilhamento e prints do site', async () => {
     await page.keyboard.press('Alt+ArrowLeft');
     await shot(app, page, 'principal');
 
+    // Manual: menu de perfis, busca na saída, comando salvo com variável e ambiente.
+    await page.getByTestId('new-tab-menu-button').click();
+    await expect(page.getByTestId('new-tab-menu')).toBeVisible();
+    await shot(app, page, 'perfis-menu');
+    await page.keyboard.press('Escape');
+
+    await page.keyboard.press('Control+F');
+    await page.getByLabel('Buscar no terminal').fill('Pedido');
+    await expect(page.getByTestId('search-count')).toContainText(/\d/);
+    await shot(app, page, 'busca');
+    await page.getByRole('button', { name: 'Fechar busca' }).click();
+
+    await page.getByRole('button', { name: 'Editar Trocar de branch' }).click();
+    await expect(page.getByTestId('command-form')).toBeVisible();
+    await shot(app, page, 'comando');
+    await page.getByTestId('command-form').getByRole('button', { name: 'Cancelar' }).click();
+
+    await page.getByRole('button', { name: 'Executar Trocar de branch' }).click();
+    await expect(page.getByTestId('variables-dialog')).toBeVisible();
+    await shot(app, page, 'variaveis');
+    await page.getByTestId('variables-dialog').getByRole('button', { name: 'Cancelar' }).click();
+
+    await palette(page, 'aplicar ambiente: produção');
+    await page.keyboard.press('Enter');
+    await expect(page.getByTestId('dialog')).toBeVisible();
+    await shot(app, page, 'ambiente-aplicar');
+    await page.getByTestId('dialog').getByRole('button', { name: 'Cancelar' }).click();
+
     // 2. Paleta: comandos do EF Core e dos perfis de execução.
     await palette(page, 'migra');
     await expect(page.getByTestId('palette-item').first()).toBeVisible();
@@ -312,6 +374,57 @@ test('gera logo, imagem de compartilhamento e prints do site', async () => {
     await shot(app, page, 'testes');
     await page.keyboard.press('Escape');
 
+    // Manual: workspace com comando inicial por painel.
+    // Só a aba do projeto entra no workspace: a primeira aba está na pasta do usuário (caminho real).
+    await page.getByTestId('tab').first().getByRole('button', { name: 'Fechar aba' }).click();
+    await expect(page.getByTestId('tab')).toHaveCount(1);
+    await palette(page, 'salvar abas como workspace');
+    await page.keyboard.press('Enter');
+    await page.getByLabel('Nome do workspace').fill('Loja: dia a dia');
+    await page.getByTestId('workspace-save').getByRole('button', { name: 'Salvar' }).click();
+    await expect(page.getByTestId('workspace-save')).toHaveCount(0);
+    await palette(page, 'gerenciar workspaces');
+    await page.keyboard.press('Enter');
+    await page.getByTestId('workspace-item').filter({ hasText: 'Loja: dia a dia' }).getByRole('button', { name: 'Editar' }).click();
+    await page.getByLabel('Comando do painel 1.1').fill('dotnet watch run --project src/Loja.Api');
+    await page.getByLabel('Comando do painel 1.2').fill('npm run dev');
+    await shot(app, page, 'workspace');
+    await page.getByTestId('workspace-editor').getByRole('button', { name: 'Salvar' }).click();
+    await expect(page.getByTestId('workspaces-list')).toBeVisible();
+    await shot(app, page, 'workspaces');
+    await page.getByTestId('workspaces-list').getByRole('button', { name: 'Fechar' }).click();
+    // O aviso "Workspace salvo" sairia nos prints seguintes.
+    for (const dismiss of await page.getByTestId('notice').getByRole('button').all()) await dismiss.click();
+
+    // Manual: host com valores herdados do grupo, keychain e verificação do servidor.
+    await page.getByRole('button', { name: 'Editar Banco' }).click();
+    await expect(page.getByTestId('host-form')).toBeVisible();
+    await shot(app, page, 'host');
+    await page.getByTestId('host-form').getByRole('button', { name: 'Cancelar' }).click();
+
+    await page.getByRole('button', { name: 'Keychain', exact: true }).click();
+    await page.getByTestId('keychain').getByRole('button', { name: 'Gerar' }).click();
+    await page.getByTestId('generate-key-form').getByLabel('Nome da chave').fill('deploy-loja');
+    await page.getByTestId('generate-key-form').locator('button[type="submit"]').click();
+    await expect(page.getByTestId('keychain-key')).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByTestId('generate-key-form')).toHaveCount(0);
+    await shot(app, page, 'keychain');
+    await page.keyboard.press('Escape');
+    await page.getByTestId('keychain').getByRole('button', { name: 'Fechar' }).click({ timeout: 2000 }).catch(() => undefined);
+
+    const server = await startTestServer({ password: 'demo' });
+    try {
+      await page.getByLabel('Buscar hosts').fill(`deploy@127.0.0.1:${server.port}`);
+      await page.getByTestId('quick-connect').getByRole('button', { name: 'Conectar' }).click();
+      await expect(page.getByTestId('ssh-prompt')).toHaveAttribute('data-kind', 'hostKey-new');
+      await shot(app, page, 'ssh-servidor-novo');
+      await page.getByTestId('ssh-prompt').getByRole('button', { name: 'Cancelar' }).click();
+      await page.getByTestId('tab').last().getByRole('button', { name: 'Fechar aba' }).click();
+      await expect(page.getByTestId('tab')).toHaveCount(1);
+    } finally {
+      await server.close();
+    }
+
     // 4. Docker e portas: um servidor iniciado numa aba aparece com a aba dona.
     await page.keyboard.press('Control+T');
     await expect.poll(() => bufferText(page)).toMatch(/>\s*$/);
@@ -331,6 +444,12 @@ test('gera logo, imagem de compartilhamento e prints do site', async () => {
     await shot(app, page, 'docker-portas');
     await page.keyboard.press('Escape');
 
+    // Manual: busca nos comandos digitados.
+    await page.keyboard.press('Control+Shift+H');
+    await expect(page.getByTestId('command-history')).toBeVisible();
+    await shot(app, page, 'historico-comandos');
+    await page.keyboard.press('Escape');
+
     // 5. Cores: seletor com hexadecimal, RGB e paleta.
     await page.keyboard.press('Control+,');
     await expect(page.getByTestId('settings')).toBeVisible();
@@ -338,6 +457,29 @@ test('gera logo, imagem de compartilhamento e prints do site', async () => {
     await expect(page.getByTestId('color-picker')).toBeVisible();
     await shot(app, page, 'cores');
     await page.keyboard.press('Escape');
+
+    // Manual: as outras seções das configurações.
+    const settings = page.getByTestId('settings');
+    await expect(settings).toBeVisible();
+    await settings.getByRole('tab', { name: 'Terminal e editor' }).click();
+    await shot(app, page, 'config-terminal');
+    await settings.getByRole('tab', { name: 'Atalhos' }).click();
+    await shot(app, page, 'config-atalhos');
+    await settings.getByRole('tab', { name: 'Perfis de shell' }).click();
+    await shot(app, page, 'config-perfis');
+    await settings.getByRole('tab', { name: 'Ambientes' }).click();
+    await page.getByTestId('environment-list').locator('li').filter({ hasText: 'Produção' }).getByRole('button', { name: 'Editar' }).click();
+    await expect(page.getByTestId('environment-editor')).toBeVisible();
+    await shot(app, page, 'config-ambientes');
+    await settings.getByRole('tab', { name: 'Plugins' }).click();
+    await expect(page.getByTestId('plugin-item').first()).toBeVisible();
+    // A pasta de plugins da demonstração fica dentro do repositório (caminho real): no print vai a pasta padrão.
+    await settings.locator('code').nth(1).evaluate((el) => {
+      el.textContent = String.raw`C:\Users\voce\AppData\Roaming\Gunslinger\plugins`;
+    });
+    await shot(app, page, 'config-plugins');
+    await settings.getByRole('tab', { name: 'Histórico' }).click();
+    await shot(app, page, 'config-historico');
     await page.keyboard.press('Escape');
   } finally {
     await close();

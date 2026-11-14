@@ -4,7 +4,7 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
   testDir: '.',
   testMatch: 'capture.spec.ts',
-  timeout: 240_000,
+  timeout: 600_000,
   workers: 1,
   reporter: 'list',
 });

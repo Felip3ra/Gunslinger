@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Manual do Gunslinger</title>
-  <meta name="description" content="Manual do Gunslinger: abas, atalhos, comandos salvos, projetos .NET e Node, testes, Docker, ambientes, workspaces, hosts SSH e keychain, cores, plugins e configuração." />
+  <meta name="description" content="Manual do Gunslinger, com prints e exemplos: abas, atalhos, comandos salvos, projetos .NET e Node, testes, Docker, ambientes, workspaces, hosts SSH e keychain, cores, plugins e configuração." />
   <meta property="og:title" content="Manual do Gunslinger" />
   <meta property="og:image" content="https://gunslinger.vercel.app/og-image.png" />
   <meta name="theme-color" content="#0b0f16" />
@@ -31,8 +31,11 @@
     <aside class="toc" aria-label="Sumário">
       <strong>Manual</strong>
       <a href="#instalacao">Instalação</a>
+      <a href="#primeiros-passos">Primeiros passos</a>
+      <a href="#tela">A tela</a>
       <a href="#atalhos">Atalhos</a>
       <a href="#abas">Abas e painéis</a>
+      <a href="#busca">Buscar na saída</a>
       <a href="#comandos">Comandos salvos</a>
       <a href="#paleta">Paleta</a>
       <a href="#projetos">Projetos .NET e Node</a>
@@ -52,20 +55,43 @@
       <a href="#plugins">Plugins</a>
       <a href="#historico">Histórico de dados</a>
       <a href="#configuracao">Configuração</a>
+      <a href="#receitas">Receitas</a>
+      <a href="#plataformas">Linux e macOS</a>
       <a href="#limitacoes">Limitações</a>
     </aside>
 
     <article class="doc">
       <h1>Manual do Gunslinger</h1>
-      <p>O Gunslinger é um terminal para Windows 10 e 11 pensado para quem trabalha com .NET e Node.js. Este manual cobre a versão <span data-version>1.0.0</span>.</p>
+      <p>O Gunslinger é um terminal para quem trabalha com .NET e Node.js, feito primeiro para o Windows 10 e 11 e com versões para Linux e macOS (veja <a href="#plataformas">Linux e macOS</a>). Este manual cobre a versão <span data-version>1.0.0</span>. Os prints usam um projeto de exemplo chamado <strong>Loja</strong> (uma API .NET com um front em Node), em <code>C:\src\Loja</code>. Clique num print para abri-lo em tamanho real.</p>
       <figure class="shot">
-        <img src="img/principal.webp" width="1440" height="900" loading="lazy" alt="Tela principal com projeto aberto, log destacado e Git no painel da direita" />
-        <figcaption>Tela principal: painel lateral com o projeto, terminal dividido e barra de status.</figcaption>
+        <a href="img/principal.webp" target="_blank" rel="noopener" title="Abrir em tamanho real"><img src="img/principal.webp" width="1440" height="900" loading="lazy" alt="Tela principal com projeto aberto, log destacado e Git no painel da direita" /></a>
+        <figcaption>Tela principal: painel lateral com o projeto, terminal dividido em dois painéis e barra de status.</figcaption>
       </figure>
 
       <h2 id="instalacao">Instalação</h2>
       <p>Baixe o <a href="/#download" data-download><code>Gunslinger-Setup.exe</code></a> e execute. A instalação é por usuário (não pede administrador), cria o atalho no Menu Iniciar e mantém suas configurações ao desinstalar.</p>
       <div class="note"><p>Se o Windows SmartScreen avisar na primeira execução, clique em <strong>Mais informações</strong> → <strong>Executar assim mesmo</strong>. O instalador ainda não tem assinatura digital.</p></div>
+
+      <h2 id="primeiros-passos">Primeiros passos</h2>
+      <p>Cinco minutos para deixar o app pronto para um repositório:</p>
+      <ol>
+        <li><strong>Abra o app.</strong> A primeira aba usa o perfil padrão. O menu <strong>▾</strong> ao lado do <strong>+</strong> lista os outros shells encontrados na máquina.</li>
+        <li><strong>Cadastre o projeto.</strong> No painel lateral, clique em <strong>◆</strong> (Projetos) → <strong>Novo projeto</strong> e escolha a pasta do repositório. O app detecta .NET e Node sozinho.</li>
+        <li><strong>Abra o projeto.</strong> Em Projetos, clique em <strong>Abrir</strong>. Uma aba nasce na raiz do repositório e o painel lateral passa a mostrar os comandos dele: EF Core, perfis de execução e scripts do <code>package.json</code>.</li>
+        <li><strong>Rode algo.</strong> Passe o mouse sobre um comando e clique em <strong>▶</strong>, ou aperte <kbd>Ctrl</kbd>+<kbd>P</kbd> e digite parte do nome.</li>
+        <li><strong>Guarde o arranjo.</strong> Divida a aba (<kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>=</kbd>), deixe cada painel onde você quer e use <strong>Salvar abas como workspace</strong> na paleta. Amanhã, <strong>Abrir workspace</strong> recria tudo.</li>
+      </ol>
+
+      <h2 id="tela">A tela</h2>
+      <table>
+        <thead><tr><th>Área</th><th>O que tem</th></tr></thead>
+        <tbody>
+          <tr><td>Barra de abas (topo)</td><td>Uma aba por terminal, <strong>+</strong> para nova aba, <strong>▾</strong> para escolher o perfil e a engrenagem das configurações à direita.</td></tr>
+          <tr><td>Painel lateral (esquerda)</td><td>Filtro, o projeto aberto com seus comandos, a seção <strong>Hosts</strong> (SSH) e os comandos salvos, por categoria. <kbd>Ctrl</kbd>+<kbd>B</kbd> mostra e esconde; arraste a borda direita para mudar a largura.</td></tr>
+          <tr><td>Terminal (centro)</td><td>Um ou mais painéis. O painel com foco tem a borda destacada.</td></tr>
+          <tr><td>Barra de status (rodapé)</td><td>Shell, projeto, pasta atual, branch do Git e versões do Node e do .NET.</td></tr>
+        </tbody>
+      </table>
 
       <h2 id="atalhos">Atalhos</h2>
       <table>
@@ -76,6 +102,7 @@
           <tr><td>Próxima / anterior aba</td><td><kbd>Ctrl</kbd>+<kbd>Tab</kbd> / <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Tab</kbd></td></tr>
           <tr><td>Paleta de comandos</td><td><kbd>Ctrl</kbd>+<kbd>P</kbd></td></tr>
           <tr><td>Buscar na saída</td><td><kbd>Ctrl</kbd>+<kbd>F</kbd></td></tr>
+          <tr><td>Histórico de comandos digitados</td><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>H</kbd></td></tr>
           <tr><td>Painel lateral</td><td><kbd>Ctrl</kbd>+<kbd>B</kbd></td></tr>
           <tr><td>Copiar / colar</td><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd> / <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd> (Ctrl+C com seleção também copia)</td></tr>
           <tr><td>Configurações</td><td><kbd>Ctrl</kbd>+<kbd>,</kbd></td></tr>
@@ -83,87 +110,307 @@
           <tr><td>Próximo / anterior painel</td><td><kbd>Alt</kbd>+<kbd>→</kbd> / <kbd>Alt</kbd>+<kbd>←</kbd></td></tr>
         </tbody>
       </table>
-      <p>Todos podem ser trocados em <strong>Configurações → Atalhos</strong>.</p>
+      <h3>Trocar um atalho</h3>
+      <ol>
+        <li>Abra <strong>Configurações → Atalhos</strong>.</li>
+        <li>Clique em <strong>Alterar</strong> na linha da ação e pressione a nova combinação (<kbd>Esc</kbd> cancela).</li>
+        <li>Se a combinação já for usada por outra ação ou pelo shell, a linha mostra o aviso. Confirme em <strong>Salvar</strong>.</li>
+      </ol>
+      <p><strong>Remover</strong> deixa a ação sem atalho (ela continua na paleta). Ações sem atalho de fábrica, como <em>Recarregar ambiente</em> ou <em>Exportar comandos e perfis</em>, aparecem com “—” e podem ganhar um.</p>
+      <figure class="shot">
+        <a href="img/config-atalhos.webp" target="_blank" rel="noopener" title="Abrir em tamanho real"><img src="img/config-atalhos.webp" width="1440" height="900" loading="lazy" alt="Configurações, seção Atalhos, com Alterar e Remover em cada linha" /></a>
+        <figcaption>Configurações → Atalhos.</figcaption>
+      </figure>
       <div class="note"><p><strong>Bash e WSL:</strong> Ctrl+W, Ctrl+T, Ctrl+P, Ctrl+F e Ctrl+B também são atalhos do readline. Para devolvê-los ao shell, troque-os nas configurações (por exemplo, Ctrl+Shift+W). A tela avisa quando uma combinação conflita.</p></div>
 
       <h2 id="abas">Abas e painéis</h2>
       <ul>
         <li>O <strong>+</strong> abre uma aba com o perfil padrão; o menu <strong>▾</strong> ao lado abre qualquer perfil detectado (PowerShell, PowerShell 7, CMD, Git Bash, distribuições do WSL) ou customizado.</li>
-        <li>Divida a aba em painéis com os atalhos acima; arraste as divisórias para redimensionar. Ctrl+W fecha o painel ativo, e a aba fecha junto com o último.</li>
-        <li>Perfis customizados, cores e ícones ficam em <strong>Configurações → Perfis de shell</strong>.</li>
+        <li>Divida a aba em painéis com os atalhos acima; arraste as divisórias para redimensionar. Ctrl+W fecha o painel ativo, e a aba fecha junto com o último. A aba mostra <strong>▦2</strong> quando tem dois painéis.</li>
+        <li>O botão do meio do mouse sobre a aba fecha a aba. Com muitas abas, elas encolhem e a roda do mouse percorre a barra.</li>
+        <li>Um ponto amarelo na aba indica alterações não commitadas no repositório daquela pasta.</li>
         <li>Ao fechar o app com comandos rodando, ele pergunta antes e encerra a árvore de processos de cada aba (nada fica órfão).</li>
       </ul>
-
-      <h2 id="comandos">Comandos salvos</h2>
-      <p>No painel lateral (<kbd>Ctrl</kbd>+<kbd>B</kbd>), o <strong>+</strong> cria um comando com nome, categoria, descrição, shell de destino e pasta. Use variáveis entre chaves:</p>
-      <pre><code>git checkout {branch}
-dotnet ef database update {migration} --connection "{conexao}"</code></pre>
-      <p>Ao executar, o app pede os valores (com lista de opções e valor padrão, se definidos). <strong>▶</strong> executa, <strong>⤓</strong> só insere no terminal sem Enter. Categorias podem ser renomeadas pelo ✎.</p>
-
-      <h2 id="paleta">Paleta de comandos</h2>
-      <p><kbd>Ctrl</kbd>+<kbd>P</kbd> busca em comandos salvos, comandos de projeto, scripts, workspaces, perfis de ambiente, hosts SSH (“Conectar: Homolog API”) e ações do app. A busca ignora acentos e aceita letras fora de ordem (“migra” encontra “Nova migration”). <kbd>Enter</kbd> executa; <kbd>Shift</kbd>+<kbd>Enter</kbd> insere sem executar.</p>
       <figure class="shot">
-        <img src="img/paleta.webp" width="1440" height="900" loading="lazy" alt="Paleta de comandos com a busca migra" />
-        <figcaption>Busca “migra”: comandos do EF Core do projeto ativo.</figcaption>
+        <a href="img/perfis-menu.webp" target="_blank" rel="noopener" title="Abrir em tamanho real"><img src="img/perfis-menu.webp" width="1440" height="900" loading="lazy" alt="Menu de perfis aberto ao lado do botão de nova aba" /></a>
+        <figcaption>Menu ▾: os shells detectados, cada um com a opção de abrir como administrador.</figcaption>
+      </figure>
+      <h3>Perfis de shell</h3>
+      <p>Em <strong>Configurações → Perfis de shell</strong> ficam os perfis detectados (com cor e a opção <strong>Ocultar</strong>, que tira o perfil do menu) e os seus. <strong>+ Perfil customizado</strong> pede nome, executável, argumentos (um por linha), pasta inicial, cor e ícone.</p>
+      <div class="example">
+        <strong>Exemplo: perfil para o Developer PowerShell do Visual Studio</strong>
+        <table>
+          <tbody>
+            <tr><td>Nome</td><td><code>VS Dev PowerShell</code></td></tr>
+            <tr><td>Executável</td><td><code>powershell.exe</code></td></tr>
+            <tr><td>Argumentos</td><td><code>-NoExit</code><br /><code>-Command</code><br /><code>&amp; 'C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\Launch-VsDevShell.ps1'</code></td></tr>
+            <tr><td>Pasta inicial</td><td><code>C:\src</code></td></tr>
+          </tbody>
+        </table>
+        <p>O caminho do script muda conforme a edição do Visual Studio instalada.</p>
+      </div>
+      <figure class="shot">
+        <a href="img/config-perfis.webp" target="_blank" rel="noopener" title="Abrir em tamanho real"><img src="img/config-perfis.webp" width="1440" height="900" loading="lazy" alt="Configurações, seção Perfis de shell" /></a>
+        <figcaption>Configurações → Perfis de shell. O perfil padrão das abas novas é escolhido em <strong>Terminal e editor</strong>.</figcaption>
       </figure>
 
-      <h2 id="projetos">Projetos .NET e Node</h2>
-      <p>Em <strong>Projetos</strong> (◆ no painel lateral), adicione a pasta do repositório. O app analisa:</p>
+      <h2 id="busca">Buscar na saída</h2>
+      <p><kbd>Ctrl</kbd>+<kbd>F</kbd> abre a busca no painel ativo. Ela destaca todas as ocorrências e mostra a posição (“1 de 9”).</p>
       <ul>
-        <li><strong>.NET:</strong> soluções e <code>.csproj</code>, sugerindo o projeto das migrations e o de startup. O grupo <strong>EF Core</strong> traz nova migration, atualizar banco, remover a última, listar e gerar script, com aviso se o <code>dotnet-ef</code> não estiver instalado.</li>
-        <li><strong>launchSettings.json:</strong> cada perfil do tipo Project vira <code>dotnet run</code> e <code>dotnet watch run</code> com <code>--launch-profile</code>; perfis de IIS Express aparecem desativados com o motivo.</li>
+        <li><kbd>Enter</kbd> vai para a próxima ocorrência, <kbd>Shift</kbd>+<kbd>Enter</kbd> para a anterior (ou as setas <strong>↑</strong> e <strong>↓</strong>).</li>
+        <li><strong>Aa</strong> diferencia maiúsculas, <strong>ab</strong> busca a palavra inteira e <strong>.*</strong> liga expressão regular.</li>
+        <li><kbd>Esc</kbd> fecha.</li>
+      </ul>
+      <div class="example">
+        <strong>Exemplo: achar os pedidos que falharam</strong>
+        <p>Ligue <strong>.*</strong> e busque <code>Pedido \d+ falhou</code>. Só as linhas de falha são destacadas.</p>
+      </div>
+      <figure class="shot">
+        <a href="img/busca.webp" target="_blank" rel="noopener" title="Abrir em tamanho real"><img src="img/busca.webp" width="1440" height="900" loading="lazy" alt="Busca por Pedido com nove ocorrências destacadas no terminal" /></a>
+        <figcaption>Busca por “Pedido”: 9 ocorrências destacadas no painel da esquerda.</figcaption>
+      </figure>
+
+      <h2 id="comandos">Comandos salvos</h2>
+      <p>Comandos salvos ficam no painel lateral, agrupados por categoria, e valem para qualquer pasta. (Os comandos de um projeto são gerados sozinhos; veja <a href="#projetos">Projetos</a>.)</p>
+      <h3>Criar um comando</h3>
+      <ol>
+        <li>No painel lateral, clique em <strong>+</strong> (Novo comando).</li>
+        <li>Preencha <strong>Nome</strong> e <strong>Comando</strong>. O resto é opcional:
+          <ul>
+            <li><strong>Categoria</strong>: o grupo no painel lateral (digite uma nova ou escolha uma existente).</li>
+            <li><strong>Shell de destino</strong>: “Aba ativa” roda onde você estiver. Se escolher um shell, o comando usa a aba ativa quando ela é desse shell e abre uma aba nova quando não é.</li>
+            <li><strong>Pasta de execução</strong>: se a aba ativa estiver em outra pasta, o app pergunta antes de trocar de pasta; em aba nova, ela já nasce na pasta.</li>
+          </ul>
+        </li>
+        <li>Clique em <strong>Salvar</strong>.</li>
+      </ol>
+      <h3>Variáveis</h3>
+      <p>Tudo que estiver entre chaves vira uma pergunta na hora de executar:</p>
+      <pre><code>git checkout {branch}
+dotnet ef database update {migration} --connection "{conexao}"</code></pre>
+      <p>Quando o comando tem variáveis, o formulário mostra a seção <strong>Variáveis</strong>, com três campos por variável: <strong>Rótulo</strong> (o texto da pergunta), <strong>Valor padrão</strong> e <strong>Opções</strong> (uma por linha; com opções, a pergunta vira uma lista). Para escrever chaves de verdade no comando, dobre-as: <code>{{</code> e <code>}}</code>.</p>
+      <figure class="shot">
+        <a href="img/comando.webp" target="_blank" rel="noopener" title="Abrir em tamanho real"><img src="img/comando.webp" width="1440" height="900" loading="lazy" alt="Formulário de comando com a variável branch e suas opções" /></a>
+        <figcaption>O comando <code>git checkout {branch}</code> com rótulo, valor padrão e lista de opções para <code>{branch}</code>.</figcaption>
+      </figure>
+      <h3>Executar</h3>
+      <ul>
+        <li>Passe o mouse sobre a linha (ou selecione-a): <strong>▶</strong> executa e <strong>⤓</strong> só escreve o comando no terminal, sem Enter, para você revisar ou completar.</li>
+        <li>Com a linha em foco, <kbd>Enter</kbd> executa e <kbd>Shift</kbd>+<kbd>Enter</kbd> insere.</li>
+        <li>Clicar na linha só seleciona: nenhum comando salvo roda sem uma ação explícita.</li>
+        <li><strong>✎</strong> edita, <strong>⧉</strong> duplica e <strong>🗑</strong> exclui. O ✎ ao lado do nome da categoria renomeia a categoria inteira.</li>
+        <li><strong>Filtrar comandos</strong>, no topo do painel, busca por nome, texto do comando, categoria e descrição.</li>
+      </ul>
+      <p>Se o comando tem variáveis, o app pede os valores e mostra o comando final antes de enviar:</p>
+      <figure class="shot">
+        <a href="img/variaveis.webp" target="_blank" rel="noopener" title="Abrir em tamanho real"><img src="img/variaveis.webp" width="1440" height="900" loading="lazy" alt="Diálogo pedindo a branch, com a prévia git checkout main" /></a>
+        <figcaption>A pergunta usa o rótulo e as opções definidos no comando; embaixo, o comando que será executado.</figcaption>
+      </figure>
+      <div class="example">
+        <strong>Mais exemplos de comandos</strong>
+        <table>
+          <thead><tr><th>Nome</th><th>Comando</th><th>Variáveis</th></tr></thead>
+          <tbody>
+            <tr><td>Subir banco</td><td><code>docker compose up -d {servico}</code></td><td><code>servico</code>: opções <code>db</code>, <code>redis</code>, <code>rabbit</code></td></tr>
+            <tr><td>Matar porta</td><td><code>npx kill-port {porta}</code></td><td><code>porta</code>: padrão <code>5270</code></td></tr>
+            <tr><td>Logs do pod</td><td><code>kubectl logs -f deploy/{app} -n {namespace}</code></td><td><code>namespace</code>: opções <code>dev</code>, <code>hml</code></td></tr>
+            <tr><td>JSON literal</td><td><code>curl -d "{{\"id\": {id}}}" http://localhost:5270/pedidos</code></td><td>só <code>id</code> é variável; <code>{{</code> e <code>}}</code> viram chaves</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="paleta">Paleta de comandos</h2>
+      <p><kbd>Ctrl</kbd>+<kbd>P</kbd> busca em tudo de uma vez: comandos salvos, comandos de projeto, scripts, workspaces, perfis de shell, perfis de ambiente, hosts SSH (“Conectar: Homolog API”) e ações do app. A coluna da esquerda diz o tipo do item (Perfil, Comando, Ação).</p>
+      <ul>
+        <li>A busca ignora acentos e aceita letras fora de ordem: “migra” encontra “Nova migration”.</li>
+        <li><kbd>Enter</kbd> executa; <kbd>Shift</kbd>+<kbd>Enter</kbd> insere sem executar; <kbd>Esc</kbd> fecha.</li>
+        <li>Itens em cinza estão indisponíveis e dizem o motivo (por exemplo, “Abra um projeto .NET para usar”).</li>
+      </ul>
+      <figure class="shot">
+        <a href="img/paleta.webp" target="_blank" rel="noopener" title="Abrir em tamanho real"><img src="img/paleta.webp" width="1440" height="900" loading="lazy" alt="Paleta de comandos com a busca migra" /></a>
+        <figcaption>Busca “migra”: comandos do EF Core do projeto ativo.</figcaption>
+      </figure>
+      <div class="example">
+        <strong>O que digitar</strong>
+        <table>
+          <tbody>
+            <tr><td><code>bash</code></td><td>Nova aba: Git Bash (e a versão como administrador)</td></tr>
+            <tr><td><code>teste</code></td><td>Executor de testes</td></tr>
+            <tr><td><code>porta</code></td><td>Docker e portas</td></tr>
+            <tr><td><code>ambiente</code></td><td>Nova aba com ambiente / Aplicar ambiente</td></tr>
+            <tr><td><code>workspace</code></td><td>Salvar abas como workspace, Gerenciar workspaces e cada workspace salvo</td></tr>
+            <tr><td><code>conectar</code></td><td>Os hosts SSH cadastrados</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="projetos">Projetos .NET e Node</h2>
+      <h3>Cadastrar</h3>
+      <ol>
+        <li>Clique em <strong>◆</strong> no painel lateral (ou <strong>Gerenciar projetos</strong> na paleta) → <strong>Novo projeto</strong>.</li>
+        <li>Escolha a <strong>pasta raiz</strong> do repositório e dê um nome ao projeto.</li>
+        <li>Confira o que o app detectou: os tipos (.NET, Node), o projeto das migrations (<code>--project</code>) e o de startup (<code>--startup-project</code>), e o gerenciador de pacotes de cada <code>package.json</code>. Troque o que não estiver certo.</li>
+        <li>Opcional: escolha o <strong>shell padrão</strong> do projeto e defina <strong>variáveis do projeto</strong>, que preenchem sozinhas as variáveis de mesmo nome nos comandos.</li>
+      </ol>
+      <p><strong>Abrir</strong> um projeto abre uma aba na raiz dele, com o shell do projeto. A partir daí o painel lateral mostra o projeto no topo e os comandos rodam sempre na pasta certa: numa aba já ligada ao projeto ou, se não houver, numa aba nova.</p>
+      <h3>O que o app gera</h3>
+      <ul>
+        <li><strong>EF Core:</strong> nova migration, atualizar banco, remover a última, listar e gerar script, já com <code>--project</code> e <code>--startup-project</code>. Há um aviso se o <code>dotnet-ef</code> não estiver instalado.</li>
+        <li><strong>Perfis de execução</strong> (<code>launchSettings.json</code>): cada perfil do tipo Project vira <code>dotnet run</code> e <code>dotnet watch run</code> com <code>--launch-profile</code>. Perfis de IIS Express aparecem desativados com o motivo.</li>
         <li><strong>Node:</strong> cada <code>package.json</code> (inclusive em subpastas de monorepos) com seus scripts e o gerenciador detectado pelo lockfile (npm, pnpm ou yarn), além de instalar dependências, adicionar pacote e npx.</li>
       </ul>
-      <p>Abrir um projeto abre uma aba na raiz dele, com o perfil padrão do projeto. Os comandos rodam sempre na pasta certa.</p>
+      <div class="example">
+        <strong>Exemplo: criar e aplicar uma migration</strong>
+        <ol>
+          <li><kbd>Ctrl</kbd>+<kbd>P</kbd>, digite <code>migra</code> e escolha <strong>Nova migration</strong>.</li>
+          <li>Informe o nome, por exemplo <code>AdicionaStatusDoPedido</code>. O app executa algo como:
+            <pre><code>dotnet ef migrations add AdicionaStatusDoPedido --project "src/Loja.Api/Loja.Api.csproj" --startup-project "src/Loja.Api/Loja.Api.csproj"</code></pre>
+          </li>
+          <li>Depois, <strong>Atualizar banco</strong> na mesma lista.</li>
+        </ol>
+      </div>
+      <p>O botão <strong>↻</strong> (Reanalisar projeto) ao lado do nome do projeto relê os arquivos (útil depois de criar um script novo no <code>package.json</code> ou um perfil no <code>launchSettings.json</code>).</p>
 
       <h2 id="testes">Executor de testes</h2>
-      <p>Com um projeto aberto, <strong>Executor de testes</strong> (paleta) lista os projetos de teste .NET (xUnit, NUnit, MSTest) e os pacotes Node com Vitest ou Jest. Os testes rodam fora do terminal e o painel mostra aprovados, falhas e ignorados, com mensagem e stack trace clicável, <strong>Rodar só este</strong>, <strong>Rodar só as falhas</strong>, cancelamento e a saída bruta.</p>
+      <p>Com um projeto aberto, <strong>Executor de testes</strong> (paleta) lista os projetos de teste .NET (xUnit, NUnit, MSTest) e os pacotes Node com Vitest ou Jest.</p>
+      <ol>
+        <li>Escolha o alvo na lista e clique em <strong>Rodar</strong>. Os testes rodam fora do terminal; o resumo mostra falhas, aprovados e ignorados.</li>
+        <li>Numa falha, a mensagem e o stack trace aparecem abaixo do teste. Clique no caminho (<code>pedidos.test.ts:13:45</code>) para abrir o arquivo no editor, na linha.</li>
+        <li>Corrija e use <strong>Rodar só este</strong> na linha do teste, ou <strong>Rodar só as falhas</strong>.</li>
+      </ol>
+      <p><strong>Só falhas</strong> filtra a lista, <strong>Mostrar saída</strong> abre a saída bruta do executor e dá para cancelar uma execução em andamento.</p>
       <figure class="shot">
-        <img src="img/testes.webp" width="1440" height="900" loading="lazy" alt="Executor de testes com uma falha e o link para a linha" />
+        <a href="img/testes.webp" target="_blank" rel="noopener" title="Abrir em tamanho real"><img src="img/testes.webp" width="1440" height="900" loading="lazy" alt="Executor de testes com uma falha e o link para a linha" /></a>
         <figcaption>Vitest: dois aprovados e uma falha com o link para <code>pedidos.test.ts:13</code>.</figcaption>
       </figure>
 
       <h2 id="docker">Docker e portas</h2>
-      <p><strong>Docker e portas</strong> (paleta) lista as portas TCP em escuta com o processo dono e, quando o processo nasceu de uma aba do Gunslinger, a aba (clique para ir até ela). <strong>Encerrar processo</strong> pede confirmação.</p>
-      <p>Os containers vêm do CLI do Docker: iniciar, parar, reiniciar e remover; <strong>Logs</strong> e <strong>Shell</strong> abrem uma aba nova com <code>docker logs -f</code> ou <code>docker exec -it … sh</code>. Sem Docker ou com o daemon parado, o painel mostra o motivo. A lista se atualiza a cada 5 segundos.</p>
+      <p><strong>Docker e portas</strong> (paleta) tem duas partes.</p>
+      <p><strong>Portas em escuta:</strong> as portas TCP abertas na máquina, com o endereço e o processo dono. Quando o processo nasceu de uma aba do Gunslinger, a coluna <strong>Aba</strong> mostra qual (clique para ir até ela). <strong>Encerrar processo</strong> pede confirmação. O filtro aceita número de porta ou nome de processo.</p>
+      <p><strong>Containers:</strong> vêm do CLI do Docker, com iniciar, parar, reiniciar e remover; <strong>Logs</strong> e <strong>Shell</strong> abrem uma aba nova com <code>docker logs -f</code> ou <code>docker exec -it … sh</code>. Sem Docker ou com o daemon parado, o painel mostra o motivo. A lista se atualiza a cada 5 segundos.</p>
+      <div class="example">
+        <strong>Exemplo: “a porta 5270 já está em uso”</strong>
+        <p>Abra o painel, digite <code>5270</code> no filtro e veja quem está com a porta. Se for um <code>dotnet watch</code> esquecido em outra aba, clique na aba para ir até ele, ou use <strong>Encerrar processo</strong>.</p>
+      </div>
       <figure class="shot">
-        <img src="img/docker-portas.webp" width="1440" height="900" loading="lazy" alt="Painel Docker e portas" />
-        <figcaption>A porta 5270 aberta por um <code>node.exe</code> da aba 3.</figcaption>
+        <a href="img/docker-portas.webp" target="_blank" rel="noopener" title="Abrir em tamanho real"><img src="img/docker-portas.webp" width="1440" height="900" loading="lazy" alt="Painel Docker e portas filtrado por 527" /></a>
+        <figcaption>A porta 5270 aberta por um <code>node.exe</code> da aba 2. Embaixo, o aviso de que o Docker não está rodando.</figcaption>
       </figure>
 
       <h2 id="ambientes">Perfis de ambiente</h2>
-      <p>Em <strong>Configurações → Ambientes</strong>, crie conjuntos de variáveis (Dev, Homologação, Produção, com <code>ASPNETCORE_ENVIRONMENT</code> e connection strings). Na paleta:</p>
+      <p>Um perfil de ambiente é um conjunto de variáveis com nome e cor: Dev, Homologação, Produção.</p>
+      <h3>Criar</h3>
+      <ol>
+        <li>Abra <strong>Configurações → Ambientes</strong> e clique em <strong>+ Ambiente</strong>.</li>
+        <li>Dê um nome, escolha a cor e escreva as variáveis, uma por linha, no formato <code>NOME=valor</code>:
+          <pre><code>ASPNETCORE_ENVIRONMENT=Staging
+ConnectionStrings__Loja=Server=hml-sql;Database=Loja;Trusted_Connection=True
+Pagamentos__UrlBase=https://hml.pagamentos.example</code></pre>
+        </li>
+        <li>Marque <strong>Ambiente sensível</strong> nos que não podem ser aplicados por engano (produção).</li>
+        <li><strong>Salvar ambiente</strong>.</li>
+      </ol>
+      <figure class="shot">
+        <a href="img/config-ambientes.webp" target="_blank" rel="noopener" title="Abrir em tamanho real"><img src="img/config-ambientes.webp" width="1440" height="900" loading="lazy" alt="Configurações, seção Ambientes, editando o ambiente Produção" /></a>
+        <figcaption>Três ambientes; “Produção” está marcado como sensível.</figcaption>
+      </figure>
+      <h3>Usar</h3>
+      <p>Pela paleta, de dois jeitos:</p>
       <ul>
-        <li><strong>Nova aba com ambiente</strong>: as variáveis entram no processo do shell e não aparecem no histórico.</li>
-        <li><strong>Aplicar ambiente</strong>: digita <code>set</code>, <code>$env:</code> ou <code>export</code> na aba ativa, com pré-visualização. Ambientes sensíveis pedem confirmação explícita.</li>
+        <li><strong>Nova aba com ambiente: …</strong> abre uma aba em que as variáveis já estão no processo do shell. Nada é digitado, então os valores não aparecem na tela nem no histórico.</li>
+        <li><strong>Aplicar ambiente: …</strong> digita os comandos na aba ativa (<code>set</code> no CMD, <code>$env:</code> no PowerShell, <code>export</code> no Bash), depois de mostrar a prévia. Ambientes sensíveis pedem confirmação explícita.</li>
       </ul>
-      <p>A aba mostra o ambiente com a cor dele. Os valores ficam em texto puro no <code>settings.json</code>: evite guardar segredos de produção ali.</p>
+      <figure class="shot">
+        <a href="img/ambiente-aplicar.webp" target="_blank" rel="noopener" title="Abrir em tamanho real"><img src="img/ambiente-aplicar.webp" width="1440" height="900" loading="lazy" alt="Confirmação para aplicar o ambiente sensível Produção" /></a>
+        <figcaption>Aplicar um ambiente sensível numa aba do CMD: a prévia do comando e a confirmação.</figcaption>
+      </figure>
+      <p>A aba e a barra de status mostram o ambiente com a cor dele.</p>
+      <div class="note"><p>Os valores ficam em texto puro no <code>settings.json</code>: evite guardar segredos de produção ali.</p></div>
 
       <h2 id="workspaces">Workspaces</h2>
-      <p>Monte as abas e painéis do dia e use <strong>Salvar abas como workspace</strong>. <strong>Abrir workspace</strong> recria tudo, com perfis, pastas e projetos. Em <strong>Gerenciar workspaces</strong>, defina um comando inicial por painel (como <code>dotnet watch run</code> ou <code>npm run dev</code>); ao abrir, o app lista os comandos e só executa depois da sua confirmação.</p>
+      <p>Um workspace guarda um arranjo de abas e painéis: perfil, pasta, projeto e, se você quiser, um comando inicial por painel.</p>
+      <h3>Salvar e ajustar</h3>
+      <ol>
+        <li>Monte as abas e painéis do dia.</li>
+        <li>Na paleta, <strong>Salvar abas como workspace</strong>, e dê um nome.</li>
+        <li>Em <strong>Gerenciar workspaces</strong> → <strong>Editar</strong>, cada painel tem três campos: perfil, pasta e <strong>comando inicial</strong>. <strong>+ Aba</strong> acrescenta uma aba; “remover” tira uma.</li>
+      </ol>
+      <figure class="shot">
+        <a href="img/workspace.webp" target="_blank" rel="noopener" title="Abrir em tamanho real"><img src="img/workspace.webp" width="1440" height="900" loading="lazy" alt="Editor de workspace com dois painéis e um comando inicial em cada" /></a>
+        <figcaption>Uma aba com dois painéis: a API em <code>dotnet watch</code> e o front em <code>npm run dev</code>.</figcaption>
+      </figure>
+      <h3>Abrir</h3>
+      <p>Use <strong>Abrir</strong> em Gerenciar workspaces ou digite o nome do workspace na paleta. O app recria as abas e painéis. Se houver comandos iniciais, ele lista os comandos e só executa depois da sua confirmação; dá para abrir sem executar nada.</p>
+      <figure class="shot">
+        <a href="img/workspaces.webp" target="_blank" rel="noopener" title="Abrir em tamanho real"><img src="img/workspaces.webp" width="1440" height="900" loading="lazy" alt="Lista de workspaces com Abrir, Editar e Excluir" /></a>
+        <figcaption>Workspaces salvos. “Loja completa (Kit Loja)” veio de um plugin, por isso só tem <strong>Abrir</strong>.</figcaption>
+      </figure>
       <p>Um painel também pode ser um <strong>host SSH</strong> (escolha “SSH: nome do host” no lugar do perfil). Com comando inicial, o painel conecta depois da confirmação e só envia o comando quando a conexão estiver pronta; se a conexão falhar ou for cancelada, o comando não é enviado. Sem comando inicial, o painel abre como “Desconectado”.</p>
 
       <h2 id="ssh">Hosts SSH</h2>
       <p>A seção <strong>Hosts</strong> do painel lateral guarda os servidores que você acessa. A conexão é feita pelo próprio app (não depende do <code>ssh.exe</code>) e cada conexão vira uma aba de terminal como as outras: atalhos, painéis, busca, links e copiar/colar funcionam igual.</p>
+      <h3>Cadastrar</h3>
       <ul>
         <li><strong>+</strong> cadastra um host: nome, endereço (nome DNS, IPv4 ou IPv6), porta, usuário, identidade ou chave, host de salto, keepalive, cor e tags.</li>
-        <li><strong>⊞</strong> cria um <strong>grupo</strong>. Grupos podem ficar dentro de grupos e definir porta, usuário, identidade, chave, host de salto, keepalive e encaminhamento do agente. Um campo vazio no host herda do grupo mais próximo, e o formulário mostra de onde vem o valor (“ops (herdado de Produção)”).</li>
-        <li>Para conectar: <kbd>Enter</kbd> ou clique duplo na linha do host, o botão <strong>▶</strong>, ou <strong>Conectar: …</strong> na paleta. <strong>◫</strong> e <strong>⊟</strong> conectam dividindo o painel ativo à direita ou abaixo. Dividir um painel SSH abre outro painel no mesmo servidor.</li>
-        <li><strong>Conexão rápida:</strong> digite <code>usuário@endereço:porta</code> na busca de hosts e escolha <strong>Conectar</strong>, sem cadastrar. <strong>Salvar host</strong> abre o formulário já preenchido.</li>
+        <li><strong>⊞</strong> cria um <strong>grupo</strong>. Grupos podem ficar dentro de grupos e definir porta, usuário, identidade, chave, host de salto, keepalive e encaminhamento do agente.</li>
+        <li>Um campo vazio no host <strong>herda</strong> do grupo mais próximo, e o formulário mostra de onde vem o valor.</li>
+      </ul>
+      <figure class="shot">
+        <a href="img/host.webp" target="_blank" rel="noopener" title="Abrir em tamanho real"><img src="img/host.webp" width="1440" height="900" loading="lazy" alt="Formulário do host Banco, com usuário e porta herdados do grupo Produção" /></a>
+        <figcaption>O host “Banco” não define usuário nem porta: usa <code>ops</code> e <code>2222</code> do grupo Produção, e passa pelo host de salto “Bastion”.</figcaption>
+      </figure>
+      <div class="example">
+        <strong>Exemplo: servidores atrás de um bastion</strong>
+        <ol>
+          <li>Crie o grupo <strong>Produção</strong> com usuário <code>ops</code> e porta <code>2222</code>.</li>
+          <li>Dentro dele, cadastre <strong>Bastion</strong> (<code>bastion.loja.example</code>), o único acessível de fora.</li>
+          <li>Cadastre <strong>API</strong> (<code>10.20.0.11</code>) e <strong>Banco</strong> (<code>10.20.0.12</code>) com <strong>Host de salto = Bastion</strong>. Usuário e porta ficam vazios: vêm do grupo.</li>
+          <li>Conectar em “Banco” abre primeiro a conexão com o Bastion e, por dentro dela, a do Banco.</li>
+        </ol>
+      </div>
+      <h3>Conectar</h3>
+      <ul>
+        <li><kbd>Enter</kbd> ou clique duplo na linha do host, o botão <strong>▶</strong>, ou <strong>Conectar: …</strong> na paleta.</li>
+        <li><strong>◫</strong> e <strong>⊟</strong> conectam dividindo o painel ativo à direita ou abaixo. Dividir um painel SSH abre outro painel no mesmo servidor.</li>
+        <li><strong>Conexão rápida:</strong> digite <code>usuário@endereço:porta</code> na busca de hosts (por exemplo, <code>deploy@10.0.0.12:2222</code>) e escolha <strong>Conectar</strong>, sem cadastrar. <strong>Salvar host</strong> abre o formulário já preenchido.</li>
         <li>✎ edita, ⧉ duplica (a cópia usa a mesma identidade e chave) e 🗑 exclui. Excluir um host usado como salto avisa quem perde o salto; excluir um grupo com hosts pergunta se eles sobem para o grupo acima ou são excluídos junto.</li>
       </ul>
       <p><strong>Ao conectar</strong>, a aba mostra a etapa (conectando, verificando o servidor, autenticando). A autenticação tenta, nesta ordem, a chave configurada, o agente SSH, a senha salva e as perguntas do servidor (keyboard-interactive, inclusive código 2FA). O que faltar é pedido num diálogo; <strong>Salvar no keychain</strong> vem desmarcado e não aparece para códigos 2FA. Várias abas do mesmo host compartilham uma conexão, então a senha e o código são pedidos uma vez só.</p>
-      <p><strong>Host de salto:</strong> defina outro host (ou um grupo) como salto, e o salto pode ter o próprio salto (até 5). Cada salto passa pela verificação do servidor e usa as próprias credenciais. Saltos em ciclo são recusados ao salvar.</p>
+      <p><strong>Host de salto:</strong> o salto pode ser outro host ou um grupo, e pode ter o próprio salto (até 5). Cada salto passa pela verificação do servidor e usa as próprias credenciais. Saltos em ciclo são recusados ao salvar.</p>
       <p><strong>Queda e reconexão:</strong> se a conexão cair (por exemplo, o servidor parou de responder ao keepalive), a saída fica na tela com “Conexão encerrada” e o motivo. <strong>Reconectar</strong> (ou <kbd>Enter</kbd>) abre uma sessão nova no mesmo painel; o app nunca reconecta sozinho. Se a conexão falhar, a aba mostra a mensagem com <strong>Tentar de novo</strong> e <strong>Editar host</strong>.</p>
-      <p><strong>Importar do OpenSSH:</strong> o <strong>⇩</strong> da seção Hosts (ou <strong>Importar hosts do ~/.ssh/config</strong> na paleta) lê <code>Host</code>, <code>HostName</code>, <code>User</code>, <code>Port</code>, <code>IdentityFile</code>, <code>ProxyJump</code>, <code>ServerAliveInterval</code> e <code>ForwardAgent</code> e mostra a prévia antes de gravar. Os hosts entram no grupo “Importados do OpenSSH”, com os valores de <code>Host *</code> como padrão do grupo; as chaves entram no keychain como referência ao arquivo. O que não for suportado (<code>Match</code>, <code>Include</code>, curingas, outras diretivas) aparece na prévia como “não será importado”.</p>
+      <h3>Importar do OpenSSH</h3>
+      <p>O <strong>⇩</strong> da seção Hosts (ou <strong>Importar hosts do ~/.ssh/config</strong> na paleta) lê <code>Host</code>, <code>HostName</code>, <code>User</code>, <code>Port</code>, <code>IdentityFile</code>, <code>ProxyJump</code>, <code>ServerAliveInterval</code> e <code>ForwardAgent</code> e mostra a prévia antes de gravar. Por exemplo, este trecho:</p>
+      <pre><code>Host bastion
+  HostName bastion.loja.example
+  User ops
+  Port 2222
+
+Host banco
+  HostName 10.20.0.12
+  ProxyJump bastion
+  IdentityFile ~/.ssh/id_ed25519</code></pre>
+      <p>vira dois hosts no grupo “Importados do OpenSSH”, com “banco” usando “bastion” como salto e a chave referenciada no keychain. Os valores de <code>Host *</code> viram o padrão do grupo. O que não for suportado (<code>Match</code>, <code>Include</code>, curingas, outras diretivas) aparece na prévia como “não será importado”.</p>
 
       <h2 id="keychain">Keychain</h2>
       <p>O <strong>🔑</strong> da seção Hosts (ou <strong>Keychain</strong> na paleta) guarda chaves e identidades.</p>
       <ul>
-        <li><strong>Chaves:</strong> importe um arquivo (guardando uma cópia cifrada ou usando o arquivo do disco a cada conexão), cole o texto da chave ou <strong>gere</strong> uma nova (Ed25519, recomendado, ou RSA 4096, com frase-senha opcional). Aceita Ed25519, ECDSA e RSA nos formatos OpenSSH e PEM. Cada chave mostra o tipo e o fingerprint SHA256; <strong>Copiar pública</strong> põe a linha <code>ssh-ed25519 AAAA… nome</code> na área de transferência, pronta para o <code>authorized_keys</code>.</li>
+        <li><strong>Chaves:</strong> importe um arquivo (guardando uma cópia cifrada ou usando o arquivo do disco a cada conexão), cole o texto da chave ou <strong>gere</strong> uma nova (Ed25519, recomendado, ou RSA 4096, com frase-senha opcional). Aceita Ed25519, ECDSA e RSA nos formatos OpenSSH e PEM. Cada chave mostra o tipo e o fingerprint SHA256.</li>
         <li><strong>Identidades:</strong> um usuário com senha e/ou chave. Hosts e grupos que usam a identidade recebem a troca de senha de uma vez.</li>
         <li>Excluir uma chave ou identidade em uso lista quem a usa; depois disso, esses hosts passam a herdar do grupo ou a pedir a credencial.</li>
       </ul>
+      <figure class="shot">
+        <a href="img/keychain.webp" target="_blank" rel="noopener" title="Abrir em tamanho real"><img src="img/keychain.webp" width="1440" height="900" loading="lazy" alt="Keychain com a chave deploy-loja, seu fingerprint e as ações" /></a>
+        <figcaption>Uma chave Ed25519 gerada no app, com o fingerprint e as ações de copiar e exportar.</figcaption>
+      </figure>
+      <div class="example">
+        <strong>Exemplo: chave nova para um servidor</strong>
+        <ol>
+          <li>No keychain, <strong>Gerar</strong> → nome <code>deploy-loja</code>, tipo Ed25519.</li>
+          <li><strong>Copiar pública</strong> põe na área de transferência uma linha como <code>ssh-ed25519 AAAA… deploy-loja</code>.</li>
+          <li>No servidor, cole essa linha em <code>~/.ssh/authorized_keys</code> do usuário.</li>
+          <li>No host (ou no grupo), escolha <code>deploy-loja</code> no campo <strong>Chave</strong>.</li>
+        </ol>
+      </div>
       <div class="note"><p>Senhas, frases-senha e chaves guardadas ficam cifradas pelo cofre do Windows (DPAPI), ligadas à sua conta, e nunca aparecem na tela: o formulário mostra só “Senha salva”, com <strong>Substituir</strong> e <strong>Apagar</strong>. Copiados para outra conta ou outro PC, esses segredos aparecem como “indisponível” e a conexão pede a credencial de novo.</p></div>
       <p>O <strong>agente SSH</strong> é configurado em <strong>Configurações → SSH e hosts conhecidos</strong>: OpenSSH do Windows (serviço <code>ssh-agent</code>, o padrão), Pageant ou nenhum. O encaminhamento do agente fica desligado por padrão e é ligado por host ou por grupo.</p>
 
@@ -174,41 +421,86 @@ dotnet ef database update {migration} --connection "{conexao}"</code></pre>
         <li><strong>Chave alterada:</strong> a conexão é bloqueada com um aviso e os fingerprints antigo e novo. Só continua por <strong>Substituir a chave gravada…</strong>, que pede uma segunda confirmação. Faça isso só se souber por que a chave mudou (por exemplo, o servidor foi reinstalado).</li>
         <li><strong>Chave revogada</strong> (<code>@revoked</code> no <code>known_hosts</code> importado): bloqueia sem opção de continuar.</li>
       </ul>
+      <figure class="shot">
+        <a href="img/ssh-servidor-novo.webp" target="_blank" rel="noopener" title="Abrir em tamanho real"><img src="img/ssh-servidor-novo.webp" width="1440" height="900" loading="lazy" alt="Diálogo de host novo com o fingerprint do servidor" /></a>
+        <figcaption>Primeira conexão a um servidor: compare o fingerprint com o que o administrador do servidor informou antes de confiar.</figcaption>
+      </figure>
+      <p>Para ver o fingerprint no próprio servidor e comparar:</p>
+      <pre><code>ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub</code></pre>
       <p>Em <strong>Configurações → SSH e hosts conhecidos</strong> ficam a lista (com busca e exclusão), o agente, o keepalive padrão (30 s; 0 desliga) e o tempo limite de conexão (20 s). <strong>Importar ~/.ssh/known_hosts</strong> traz as chaves que o OpenSSH já conhece, inclusive as com nome em hash.</p>
 
       <h2 id="admin">Abas como administrador</h2>
-      <p>No menu ▾, o botão <strong>🛡 Admin</strong> ao lado de PowerShell, CMD e Git Bash abre o shell elevado (também na paleta). A confirmação é sempre o UAC do Windows.</p>
+      <p>No menu ▾, o botão <strong>🛡 Admin</strong> ao lado de PowerShell, CMD e Git Bash abre o shell elevado (também na paleta: “Nova aba como administrador: …”). A confirmação é sempre o UAC do Windows.</p>
       <ul>
-        <li>Com o <strong>sudo do Windows em modo inline</strong> (Windows 11 24H2+) ou o <strong>gsudo</strong>, a aba elevada fica dentro do app, marcada com 🛡.</li>
+        <li>Com o <strong>sudo do Windows em modo inline</strong> (Windows 11 24H2+) ou o <strong>gsudo</strong>, a aba elevada fica dentro do app, marcada com 🛡 na aba e “Administrador” na barra de status.</li>
         <li>Sem nenhum dos dois, o shell elevado abre numa janela separada.</li>
       </ul>
 
       <h2 id="status">Barra de status</h2>
-      <p>Mostra o shell, o projeto, a pasta atual, a branch do Git (com ● quando há alterações) e as versões do Node e do .NET <em>da pasta atual</em> (respeitando o <code>global.json</code> e os shims do Volta). Com o <code>fnm</code> por sessão, o PowerShell e o Bash informam a versão do Node da aba. Quando um instalador ou o <code>setx</code> muda as variáveis de ambiente, o app recarrega o ambiente sozinho; para mudanças que não avisam o Windows, use <strong>Recarregar ambiente</strong> na paleta. Abas abertas mostram “ambiente desatualizado”, com a opção de reiniciar.</p>
+      <p>Da esquerda para a direita: o shell, o ambiente (se houver), o projeto (◆), a pasta atual, a branch do Git (com ● quando há alterações) e, à direita, as versões do Node e do .NET <em>da pasta atual</em> (respeitando o <code>global.json</code> e os shims do Volta). Com o <code>fnm</code> por sessão, o PowerShell e o Bash informam a versão do Node da aba.</p>
+      <p>Quando um instalador ou o <code>setx</code> muda as variáveis de ambiente, o app recarrega o ambiente sozinho; para mudanças que não avisam o Windows, use <strong>Recarregar ambiente</strong> na paleta. Abas abertas antes da mudança mostram “ambiente desatualizado · Reiniciar aba”.</p>
       <p>Numa aba SSH, a barra mostra <code>usuário@endereço:porta</code> e se a conexão está ativa, no lugar de projeto, pasta, Git e versões (que são da sua máquina, não do servidor).</p>
 
       <h2 id="sessao">Sessão, histórico de comandos e processos</h2>
       <ul>
         <li><strong>Última sessão:</strong> ao abrir, o app reabre as abas e painéis que estavam abertos (sem executar nenhum comando). Abas SSH voltam como “Desconectado”, com <strong>Conectar</strong>, e não conectam sozinhas; se o host tiver sido excluído, mostram “Host não encontrado”. Conexões rápidas não são reabertas.</li>
-        <li><strong>Histórico de comandos:</strong> <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>H</kbd> busca nos comandos digitados em todas as abas. Enter escreve o comando no terminal; <kbd>Ctrl</kbd>+Enter executa. Comandos começados por espaço não são guardados.</li>
+        <li><strong>Histórico de comandos:</strong> <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>H</kbd> busca nos comandos digitados em todas as abas, com a pasta e quando foram usados. <kbd>Enter</kbd> escreve o comando no terminal; <kbd>Ctrl</kbd>+<kbd>Enter</kbd> executa. Comandos começados por espaço não são guardados (útil para algo com senha na linha).</li>
         <li><strong>Processos que saem da aba:</strong> ao fechar uma aba, os processos que ela iniciou e continuam rodando fora dela (<code>start</code>, servidores em segundo plano) são listados com <strong>Encerrar</strong> ou <strong>Manter rodando</strong>.</li>
         <li><strong>Abas SSH</strong> não entram na pergunta de “comandos rodando” ao fechar: o app não sabe o que roda no servidor. Fechar a aba encerra a sessão remota.</li>
       </ul>
-      <p>Tudo isso se ajusta em <strong>Configurações → Terminal e editor</strong>. As configurações também abrem pela engrenagem à direita das abas.</p>
+      <figure class="shot">
+        <a href="img/historico-comandos.webp" target="_blank" rel="noopener" title="Abrir em tamanho real"><img src="img/historico-comandos.webp" width="1440" height="900" loading="lazy" alt="Busca no histórico de comandos digitados" /></a>
+        <figcaption><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>H</kbd>: os comandos digitados, com a pasta de cada um.</figcaption>
+      </figure>
+      <h3>Terminal e editor</h3>
+      <p>Em <strong>Configurações → Terminal e editor</strong>:</p>
+      <table>
+        <thead><tr><th>Opção</th><th>O que faz</th></tr></thead>
+        <tbody>
+          <tr><td>Perfil padrão</td><td>O shell do <strong>+</strong> e do <kbd>Ctrl</kbd>+<kbd>T</kbd>.</td></tr>
+          <tr><td>Editor e argumentos</td><td>O programa que abre os caminhos clicados na saída. O padrão é <code>code</code> com <code>-g</code> e <code>{file}:{line}:{column}</code>.</td></tr>
+          <tr><td>Notificar comandos demorados</td><td>Avisa pelo Windows quando um comando que levou mais que o tempo definido (10 s) termina com a janela fora de foco.</td></tr>
+          <tr><td>Ctrl+C copia</td><td>Com texto selecionado, copia; sem seleção, interrompe o comando.</td></tr>
+          <tr><td>Reabrir a última sessão</td><td>Liga ou desliga a reabertura das abas ao iniciar.</td></tr>
+          <tr><td>Guardar os comandos digitados</td><td>Liga o histórico de comandos; <strong>Limpar histórico</strong> apaga o que foi guardado.</td></tr>
+          <tr><td>Processos ao fechar a aba</td><td>Perguntar, encerrar sempre ou manter rodando.</td></tr>
+        </tbody>
+      </table>
+      <figure class="shot">
+        <a href="img/config-terminal.webp" target="_blank" rel="noopener" title="Abrir em tamanho real"><img src="img/config-terminal.webp" width="1440" height="900" loading="lazy" alt="Configurações, seção Terminal e editor" /></a>
+        <figcaption>Configurações → Terminal e editor.</figcaption>
+      </figure>
+      <div class="example">
+        <strong>Exemplo: abrir os arquivos no Rider ou no Visual Studio</strong>
+        <table>
+          <thead><tr><th>Editor</th><th>Comando</th><th>Argumentos (um por linha)</th></tr></thead>
+          <tbody>
+            <tr><td>VS Code</td><td><code>code</code></td><td><code>-g</code><br /><code>{file}:{line}:{column}</code></td></tr>
+            <tr><td>Rider</td><td><code>rider64.exe</code></td><td><code>--line</code><br /><code>{line}</code><br /><code>{file}</code></td></tr>
+            <tr><td>Visual Studio</td><td><code>devenv.exe</code></td><td><code>/Edit</code><br /><code>{file}</code></td></tr>
+          </tbody>
+        </table>
+        <p>O comando precisa estar no <code>PATH</code>, ou use o caminho completo do executável.</p>
+      </div>
 
       <h2 id="atualizacoes">Atualizações</h2>
       <p>O app procura versões novas ao abrir e a cada 4 horas, baixa em segundo plano e mostra <strong>Versão X pronta · Reiniciar</strong> na barra de status. A instalação acontece ao reiniciar ou na próxima vez que você fechar o app. Em <strong>Configurações → Sobre e atualizações</strong> ficam a versão, <strong>Procurar atualizações</strong> e a opção de desligar a verificação automática.</p>
 
       <h2 id="logs">Destaque de logs e links</h2>
-      <p>Erros (vermelho), avisos (amarelo) e sucesso (verde) são destacados na saída: MSBuild, níveis <code>fail:</code>/<code>warn:</code> do ASP.NET Core, <code>npm WARN</code> e resultados de testes. O destaque é só visual: copiar e buscar veem o texto original. Ligue e desligue com <strong>Alternar destaque de logs</strong>, ou crie regras no <code>settings.json</code>:</p>
+      <p>Erros (vermelho), avisos (amarelo) e sucesso (verde) são destacados na saída: MSBuild, níveis <code>fail:</code>/<code>warn:</code> do ASP.NET Core, <code>npm WARN</code> e resultados de testes. O destaque é só visual: copiar e buscar veem o texto original. Ligue e desligue com <strong>Alternar destaque de logs</strong> na paleta.</p>
+      <p>Para destacar termos seus, crie regras no <code>settings.json</code> (botão <strong>Abrir settings.json</strong> nas configurações):</p>
       <pre><code>"logHighlight": {
   "enabled": true,
-  "rules": [{ "pattern": "PEDIDO-\\d+", "ignoreCase": false, "foreground": "#58a6ff" }]
+  "rules": [
+    { "pattern": "PEDIDO-\\d+", "ignoreCase": false, "foreground": "#58a6ff" },
+    { "pattern": "timeout|deadlock", "ignoreCase": true, "foreground": "#f85149" }
+  ]
 }</code></pre>
-      <p><kbd>Ctrl</kbd>+clique abre URLs no navegador e caminhos como <code>Program.cs(42,13)</code> ou <code>src/App.tsx:10:5</code> no editor (VS Code por padrão, configurável).</p>
+      <p>A primeira regra pinta de azul códigos como <code>PEDIDO-4821</code>; a segunda pinta de vermelho “timeout” e “deadlock” em qualquer caixa. O <code>pattern</code> é uma expressão regular, e a barra invertida precisa ser dobrada dentro do JSON.</p>
+      <p><kbd>Ctrl</kbd>+clique abre URLs no navegador e caminhos como <code>Program.cs(42,13)</code> ou <code>src/App.tsx:10:5</code> no editor configurado, já na linha.</p>
 
       <h2 id="cores">Cores</h2>
-      <p>Em <strong>Configurações → Aparência</strong> ficam as cores da interface (fundo, painéis, borda, texto, destaque, erro, aviso e sucesso) e as do terminal (fundo, texto, cursor, seleção e as 16 cores ANSI). Clicar numa cor abre o seletor:</p>
+      <p>Em <strong>Configurações → Aparência</strong> ficam a fonte, o tamanho, o cursor e o histórico de linhas do terminal, as cores da interface (fundo, painéis, borda, texto, destaque, erro, aviso e sucesso) e as do terminal (fundo, texto, cursor, seleção e as 16 cores ANSI). <strong>Aplicar tema</strong> copia um conjunto pronto para as cores do terminal. Clicar numa cor abre o seletor:</p>
       <ul>
         <li>campo <strong>hexadecimal</strong>, que aceita <code>#rrggbb</code>, <code>#rgb</code>, <code>rgb(18, 52, 86)</code> ou <code>18, 52, 86</code>;</li>
         <li>controles <strong>R, G e B</strong> de 0 a 255, com a cor atual ao lado da nova;</li>
@@ -216,25 +508,50 @@ dotnet ef database update {migration} --connection "{conexao}"</code></pre>
       </ul>
       <p>A cor só é gravada em <strong>Aplicar</strong> (ou Enter); Esc descarta. <strong>Restaurar cores padrão</strong> volta a interface ao original.</p>
       <figure class="shot">
-        <img src="img/cores.webp" width="1440" height="900" loading="lazy" alt="Seletor de cor aberto em Aparência" />
+        <a href="img/cores.webp" target="_blank" rel="noopener" title="Abrir em tamanho real"><img src="img/cores.webp" width="1440" height="900" loading="lazy" alt="Seletor de cor aberto em Aparência" /></a>
         <figcaption>Seletor de cor com hexadecimal, RGB e paleta.</figcaption>
       </figure>
 
       <h2 id="plugins">Plugins</h2>
-      <p>Plugins são <strong>só dados</strong>: uma pasta em <code>%APPDATA%\Gunslinger\plugins\</code> com um <code>plugin.json</code>. Nenhum código de plugin é executado. Eles podem trazer comandos, workspaces, perfis de shell, temas e regras de destaque, que aparecem marcados com o nome do plugin e sem editar ou excluir.</p>
-      <pre><code>{
+      <p>Plugins são <strong>só dados</strong>: uma pasta em <code>%APPDATA%\Gunslinger\plugins\</code> com um <code>plugin.json</code>. Nenhum código de plugin é executado. Eles podem trazer comandos, workspaces, perfis de shell, temas e regras de destaque, que aparecem marcados com o nome do plugin e sem editar ou excluir. Servem para compartilhar o kit de um time.</p>
+      <h3>Criar um plugin</h3>
+      <ol>
+        <li>Em <strong>Configurações → Plugins</strong>, clique em <strong>Abrir pasta de plugins</strong>.</li>
+        <li>Crie uma pasta (por exemplo, <code>kit-loja</code>) com um arquivo <code>plugin.json</code>:
+          <pre><code>{
   "id": "kit-loja",
   "name": "Kit Loja",
   "version": "1.0.0",
   "contributes": {
-    "commands": [{ "id": "db", "name": "Subir banco", "command": "docker compose up -d db" }],
-    "workspaces": [{ "id": "full", "name": "Loja", "tabs": [{ "type": "pane", "pane": { "command": "npm run dev" } }] }]
+    "commands": [
+      { "id": "seed", "name": "Popular banco", "command": "dotnet run --project tools/Seed", "category": "Kit Loja" }
+    ],
+    "workspaces": [
+      { "id": "full", "name": "Loja completa", "tabs": [{ "type": "pane", "pane": { "command": "npm run dev" } }] }
+    ]
   }
 }</code></pre>
-      <p>Em <strong>Configurações → Plugins</strong> ficam a lista, os erros de validação, ativar/desativar, abrir a pasta e recarregar.</p>
+        </li>
+        <li>O plugin aparece na lista sem reiniciar (ou clique em <strong>Recarregar</strong>). Se o arquivo tiver erro, a lista mostra o que está errado.</li>
+      </ol>
+      <figure class="shot">
+        <a href="img/config-plugins.webp" target="_blank" rel="noopener" title="Abrir em tamanho real"><img src="img/config-plugins.webp" width="1440" height="900" loading="lazy" alt="Configurações, seção Plugins, com o plugin Kit Loja ativo" /></a>
+        <figcaption>O plugin do exemplo: 1 comando e 1 workspace. No painel lateral, o comando aparece na categoria “Kit Loja”.</figcaption>
+      </figure>
+      <p>Desmarcar <strong>Ativo</strong> tira da tela tudo que o plugin trouxe, sem apagar a pasta.</p>
 
       <h2 id="historico">Histórico de dados</h2>
-      <p>A cada mudança em configurações, comandos, projetos, workspaces ou hosts (pela interface ou editando os arquivos), o app guarda uma versão local. O keychain e os hosts conhecidos ficam de fora, para que restaurar uma versão antiga não traga de volta como confiável uma chave de servidor que você substituiu. Em <strong>Configurações → Histórico</strong> você cria pontos de restauração com nome, restaura qualquer versão (o estado atual fica salvo como “Antes de restaurar”) e exclui versões. Ficam as 50 automáticas mais recentes.</p>
+      <p>A cada mudança em configurações, comandos, projetos, workspaces ou hosts (pela interface ou editando os arquivos), o app guarda uma versão local. Ficam as 50 automáticas mais recentes; pontos com nome não são apagados sozinhos.</p>
+      <ul>
+        <li><strong>Antes de uma mudança grande</strong> (importar comandos de alguém, reorganizar categorias), digite um nome e clique em <strong>Criar ponto de restauração</strong>.</li>
+        <li><strong>Restaurar</strong> volta tudo para aquela versão. O estado atual fica salvo como “Antes de restaurar”, então dá para desfazer.</li>
+        <li><strong>Excluir</strong> remove uma versão.</li>
+      </ul>
+      <p>O keychain e os hosts conhecidos ficam de fora, para que restaurar uma versão antiga não traga de volta como confiável uma chave de servidor que você substituiu.</p>
+      <figure class="shot">
+        <a href="img/config-historico.webp" target="_blank" rel="noopener" title="Abrir em tamanho real"><img src="img/config-historico.webp" width="1440" height="900" loading="lazy" alt="Configurações, seção Histórico, com duas versões automáticas" /></a>
+        <figcaption>Cada versão mostra a data e quantos comandos, projetos e workspaces tinha.</figcaption>
+      </figure>
 
       <h2 id="configuracao">Configuração</h2>
       <p>Os arquivos ficam em <code>%APPDATA%\Gunslinger</code>:</p>
@@ -252,8 +569,70 @@ dotnet ef database update {migration} --connection "{conexao}"</code></pre>
           <tr><td><code>history/</code>, <code>plugins/</code></td><td>histórico de dados e plugins</td></tr>
         </tbody>
       </table>
-      <p>Mudanças feitas direto nos arquivos são aplicadas sem reiniciar. Se um arquivo ficar inválido, o app abre com os valores padrão, mostra a linha do erro e não grava nada nele até você corrigir (a versão anterior fica em <code>&lt;arquivo&gt;.bak</code>). <strong>Importar/Exportar</strong> (paleta) troca comandos, perfis, projetos e hosts SSH com outras pessoas, com prévia e resolução de conflitos.</p>
+      <p>Mudanças feitas direto nos arquivos são aplicadas sem reiniciar. Se um arquivo ficar inválido, o app abre com os valores padrão, mostra a linha do erro e não grava nada nele até você corrigir (a versão anterior fica em <code>&lt;arquivo&gt;.bak</code>).</p>
+      <h3>Importar e exportar</h3>
+      <p><strong>Exportar comandos e perfis</strong> e <strong>Importar comandos e perfis</strong> (paleta) trocam comandos, perfis, projetos e hosts SSH com outras pessoas. A importação mostra a prévia de cada item e deixa você resolver os conflitos antes de gravar. As pastas raiz dos projetos são exportadas como estão e podem não existir na outra máquina.</p>
       <div class="note"><p>Ao exportar hosts, vão junto os grupos, os hosts de salto e as identidades, mas <strong>nunca</strong> senhas, frases-senha ou chaves guardadas no keychain. Chaves que apontam para um arquivo vão como referência ao caminho. Quem importa vê na prévia o que chega sem chave ou sem senha.</p></div>
+
+      <h2 id="receitas">Receitas</h2>
+      <h3>Começar o dia com um atalho</h3>
+      <ol>
+        <li>Abra o projeto, divida a aba e rode a API num painel e o front no outro.</li>
+        <li><strong>Salvar abas como workspace</strong> → “Loja: dia a dia”.</li>
+        <li>Em <strong>Gerenciar workspaces → Editar</strong>, ponha <code>dotnet watch run --project src/Loja.Api</code> no primeiro painel e <code>npm run dev</code> no segundo.</li>
+        <li>No dia seguinte: <kbd>Ctrl</kbd>+<kbd>P</kbd>, digite <code>loja</code>, <kbd>Enter</kbd> e confirme os comandos.</li>
+      </ol>
+      <h3>Testar a API contra homologação sem mexer no seu ambiente</h3>
+      <ol>
+        <li>Crie o ambiente “Homologação” com <code>ASPNETCORE_ENVIRONMENT=Staging</code> e a connection string de lá.</li>
+        <li>Na paleta, <strong>Nova aba com ambiente: Homologação</strong>. A aba fica marcada com a cor do ambiente.</li>
+        <li>Rode a API nessa aba. As outras abas continuam em Dev.</li>
+      </ol>
+      <h3>Passar seus comandos para um colega</h3>
+      <ol>
+        <li>Na paleta, <strong>Exportar comandos e perfis</strong>, marque as categorias de comandos, perfis, projetos e hosts que vão e salve o arquivo.</li>
+        <li>O colega usa <strong>Importar comandos e perfis</strong>, confere a prévia e grava.</li>
+        <li>Se for para o time todo e os comandos não devem ser editados, prefira um <a href="#plugins">plugin</a> versionado no repositório.</li>
+      </ol>
+      <h3>Acompanhar o log de um container</h3>
+      <ol>
+        <li>Na paleta, <strong>Docker e portas</strong>.</li>
+        <li>Na linha do container, clique em <strong>Logs</strong>: abre uma aba com <code>docker logs -f</code>.</li>
+        <li>Nessa aba, <kbd>Ctrl</kbd>+<kbd>F</kbd> para buscar e <kbd>Ctrl</kbd>+clique nos caminhos de arquivo do stack trace.</li>
+      </ol>
+
+      <h2 id="plataformas">Linux e macOS</h2>
+      <p>As versões de Linux e macOS usam o mesmo código e têm quase tudo deste manual: abas e painéis, comandos salvos, paleta, projetos .NET e Node, executor de testes, Docker e portas, ambientes, workspaces, SSH e keychain, plugins e histórico de dados. Os prints deste manual são do Windows; nos outros sistemas muda o nome dos shells.</p>
+      <h3>Instalar</h3>
+      <table>
+        <thead><tr><th>Sistema</th><th>Arquivo</th><th>Como</th></tr></thead>
+        <tbody>
+          <tr><td>Linux</td><td><code>Gunslinger-linux-x86_64.AppImage</code></td><td><code>chmod +x Gunslinger-linux-x86_64.AppImage</code> e execute. Atualiza sozinho.</td></tr>
+          <tr><td>Debian, Ubuntu</td><td><code>Gunslinger-linux-amd64.deb</code></td><td><code>sudo apt install ./Gunslinger-linux-amd64.deb</code>. Para atualizar, instale a versão nova.</td></tr>
+          <tr><td>macOS (Apple Silicon)</td><td><code>Gunslinger-mac-arm64.dmg</code></td><td rowspan="2">Arraste para Aplicativos. O app ainda não é assinado pela Apple: na primeira abertura, Ajustes do Sistema → Privacidade e Segurança → <strong>Abrir Mesmo Assim</strong>. Atualizações são manuais.</td></tr>
+          <tr><td>macOS (Intel)</td><td><code>Gunslinger-mac-x64.dmg</code></td></tr>
+        </tbody>
+      </table>
+      <h3>Shells</h3>
+      <p>O app encontra zsh, bash e fish (pelo <code>/etc/shells</code> e pelo <code>PATH</code>) e o PowerShell (<code>pwsh</code>), se instalado. Com <strong>Perfil padrão</strong> em “Automático”, as abas novas usam o seu shell de login (<code>$SHELL</code>).</p>
+      <ul>
+        <li><strong>zsh e bash</strong> têm a mesma integração do Windows: pasta atual na barra de status, aviso de comando demorado, histórico de comandos e “comando rodando” ao fechar a aba. Seus arquivos de inicialização (<code>.zshrc</code>, <code>.bashrc</code>, <code>.bash_profile</code>) são carregados normalmente e não são alterados.</li>
+        <li><strong>fish</strong> abre sem integração: funciona como terminal, mas a pasta atual e o fim dos comandos não são rastreados.</li>
+      </ul>
+      <h3>O que muda</h3>
+      <table>
+        <thead><tr><th>Recurso</th><th>Linux e macOS</th></tr></thead>
+        <tbody>
+          <tr><td>Abas como administrador</td><td>Não existe. Use <code>sudo</code> dentro da aba.</td></tr>
+          <tr><td>CMD, Git Bash e WSL</td><td>Só no Windows.</td></tr>
+          <tr><td>Ambiente</td><td>Aberto pelo Dock ou pelo menu, o app lê o <code>PATH</code> e as variáveis do seu shell de login (Homebrew, nvm, fnm, asdf). <strong>Recarregar ambiente</strong> lê de novo; não há recarga automática.</td></tr>
+          <tr><td>Agente SSH</td><td>“Agente do sistema” usa o <code>SSH_AUTH_SOCK</code> (ssh-agent, 1Password, Secretive). Não há Pageant.</td></tr>
+          <tr><td>Senhas guardadas</td><td>Cifradas pelo Chaveiro do macOS ou, no Linux, pelo chaveiro da sessão (GNOME Keyring ou KWallet).</td></tr>
+          <tr><td>Portas em escuta</td><td>Pelo <code>lsof</code> (ou <code>ss</code> no Linux). No Linux, processos de outros usuários aparecem sem o nome.</td></tr>
+          <tr><td>Processos fora da aba</td><td>Fechar a aba encerra o shell e os processos filhos dele; os que já saíram da árvore (<code>nohup</code>, <code>disown</code>) continuam rodando, sem a pergunta que existe no Windows.</td></tr>
+          <tr><td>Pastas de configuração</td><td>Linux: <code>~/.config/Gunslinger</code>. macOS: <code>~/Library/Application Support/Gunslinger</code>.</td></tr>
+        </tbody>
+      </table>
 
       <h2 id="limitacoes">Limitações conhecidas</h2>
       <ul>

@@ -4,9 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Gunslinger — Terminal para .NET e Node.js</title>
-  <meta name="description" content="Gunslinger: terminal para Windows com abas, comandos salvos, EF Core, scripts do npm, testes, Docker e portas, e hosts SSH com keychain. Download gratuito." />
+  <meta name="description" content="Gunslinger: terminal para .NET e Node.js com abas, comandos salvos, EF Core, scripts do npm, testes, Docker e portas, e hosts SSH com keychain. Download gratuito." />
   <meta property="og:title" content="Gunslinger — Terminal para .NET e Node.js" />
-  <meta property="og:description" content="O terminal do Windows para quem vive de .NET e Node.js. Download gratuito." />
+  <meta property="og:description" content="O terminal para quem vive de .NET e Node.js. Download gratuito." />
   <meta property="og:type" content="website" />
   <meta property="og:image" content="https://gunslinger.vercel.app/og-image.png" />
   <meta name="twitter:card" content="summary_large_image" />
@@ -37,17 +37,17 @@
   <header class="wrap">
     <div class="hero">
       <div>
-        <span class="pill"><i></i>Versão <span data-version>1.0.0</span> para Windows 10 e 11</span>
-        <h1>O terminal do Windows que fala <span>.NET e Node.js.</span></h1>
+        <span class="pill"><i></i>Versão <span data-version>1.0.0</span> <span data-winonly>para Windows 10 e 11</span><span data-multi hidden>para Windows, Linux e macOS</span></span>
+        <h1>O terminal que fala <span>.NET e Node.js.</span></h1>
         <p class="lead">Abas com PowerShell, CMD, Git Bash, WSL e seus servidores SSH, comandos de EF Core e scripts do <code>package.json</code> a um clique, testes, Docker e portas no mesmo lugar, e uma barra de status com branch, Node e .NET da pasta em que você está.</p>
         <div class="cta">
-          <a class="btn btn-primary" data-download href="#download">
+          <a class="btn btn-primary" data-download data-hero-download href="#download">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 21h16"/></svg>
-            Baixar para Windows
+            <span data-hero-label>Baixar para Windows</span>
           </a>
           <a class="btn btn-ghost" href="#recursos">Ver recursos</a>
         </div>
-        <div class="meta"><span>Gratuito</span><span>Sem cadastro</span><span>Seus dados ficam no seu PC</span><span>Windows 10 e 11</span></div>
+        <div class="meta"><span>Gratuito</span><span>Sem cadastro</span><span>Seus dados ficam no seu PC</span><span data-winonly>Windows 10 e 11</span><span data-multi hidden>Windows, Linux e macOS</span></div>
       </div>
       <div class="hero-logo"><img src="logo-512.png" alt="Logo do Gunslinger: um tambor de revólver com um prompt de terminal no centro" width="256" height="256" /></div>
     </div>
@@ -119,17 +119,39 @@
         <div>
           <div class="eyebrow">Download gratuito</div>
           <h2>Baixe o Gunslinger</h2>
-          <p class="sub">Versão <span data-version>1.0.0</span> para Windows 10 e 11 (64 bits) · instalador <span data-size>87 MB</span></p>
-          <div class="cta">
-            <a class="btn btn-primary" data-download href="#">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 21h16"/></svg>
-              Baixar instalador
-            </a>
-            <a class="btn btn-ghost" data-releases href="#">Todas as versões</a>
+          <p class="sub">Versão <span data-version>1.0.0</span> · 64 bits · <a data-releases href="#">todas as versões</a></p>
+          <div class="platforms">
+            <div class="platform" data-platform="windows">
+              <h3>Windows</h3>
+              <a class="btn btn-primary" data-download href="#">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 21h16"/></svg>
+                Baixar instalador
+              </a>
+              <p>Windows 10 (1809 ou mais novo) e 11 · <span data-size>87 MB</span>. Se o SmartScreen avisar, clique em “Mais informações” → “Executar assim mesmo”: o instalador ainda não tem assinatura digital.</p>
+            </div>
+            <div class="platform" data-platform="linux" hidden>
+              <h3>Linux</h3>
+              <a class="btn btn-primary" data-asset="Gunslinger-linux-x86_64.AppImage" href="#">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 21h16"/></svg>
+                AppImage <small data-asset-size></small>
+              </a>
+              <a class="btn btn-ghost" data-asset="Gunslinger-linux-amd64.deb" href="#">.deb <small data-asset-size></small></a>
+              <p>AppImage: <code>chmod +x Gunslinger-linux-x86_64.AppImage</code> e execute; ele se atualiza sozinho. O <code>.deb</code> (Debian, Ubuntu e derivados) é atualizado baixando a versão nova.</p>
+            </div>
+            <div class="platform" data-platform="mac" hidden>
+              <h3>macOS</h3>
+              <a class="btn btn-primary" data-asset="Gunslinger-mac-arm64.dmg" href="#">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 21h16"/></svg>
+                Apple Silicon <small data-asset-size></small>
+              </a>
+              <a class="btn btn-ghost" data-asset="Gunslinger-mac-x64.dmg" href="#">Intel <small data-asset-size></small></a>
+              <p>O app ainda não é assinado pela Apple: na primeira abertura, vá em Ajustes do Sistema → Privacidade e Segurança e clique em “Abrir Mesmo Assim”. No macOS as atualizações são manuais.</p>
+            </div>
           </div>
-          <p class="req">Requisitos: Windows 10 (1809 ou mais novo) ou Windows 11, 64 bits. Para os recursos de .NET, o SDK do .NET; para os de Node, o Node.js. Se o SmartScreen exibir um aviso, clique em “Mais informações” → “Executar assim mesmo”: o instalador ainda não tem assinatura digital.</p>
+          <p class="req" data-winonly>Versões para Linux e macOS aparecem aqui quando a release publicada as incluir.</p>
+          <p class="req">Para os recursos de .NET, o SDK do .NET; para os de Node, o Node.js.</p>
         </div>
-        <img src="logo-256.png" alt="" />
+        <img src="logo-256.png" alt="" data-winonly />
       </div>
     </div>
   </section>
@@ -146,7 +168,8 @@
       <details><summary>Funciona com meu prompt do oh-my-posh ou starship?</summary><p>Sim. A integração com o shell envolve o seu prompt sem alterar o <code>$PROFILE</code>, o <code>.bashrc</code> nem nenhum outro arquivo seu.</p></details>
       <details><summary>Ctrl+W e Ctrl+T conflitam com o Bash?</summary><p>Por padrão eles são atalhos do app (fechar e abrir aba). Em Configurações → Atalhos você troca qualquer combinação, e a tela avisa quando uma delas conflita com o readline.</p></details>
       <details><summary>Como abro um terminal como administrador?</summary><p>No menu ▾ de nova aba, use 🛡 Admin. Com o sudo do Windows (modo inline) ou o gsudo, a aba elevada fica dentro do app; sem eles, abre numa janela separada. A confirmação é sempre o UAC do Windows.</p></details>
-      <details><summary>Tem versão para macOS ou Linux?</summary><p>Ainda não. O Gunslinger é feito para o Windows (ConPTY, Registro, sudo do Windows). O WSL roda normalmente dentro dele.</p></details>
+      <details data-winonly><summary>Tem versão para macOS ou Linux?</summary><p>A versão publicada é só para Windows. As de Linux e macOS já são geradas a partir do mesmo código e entram na seção de download quando forem publicadas. No Windows, o WSL roda normalmente dentro do app.</p></details>
+      <details data-multi hidden><summary>Tem versão para macOS ou Linux?</summary><p>Sim. No Linux há AppImage e <code>.deb</code> (64 bits); no macOS, <code>.dmg</code> para Apple Silicon e Intel. Os shells são os do sistema (zsh, bash, fish e o PowerShell, se instalado), com o mesmo rastreamento de pasta e de comandos no zsh e no bash. Ficam só no Windows: abas como administrador, CMD, Git Bash e WSL, a pergunta sobre processos que continuam rodando fora da aba e o recarregamento automático do ambiente. Veja as diferenças no <a href="manual.html#plataformas">manual</a>.</p></details>
       <details><summary>Por que o Windows mostra um aviso ao instalar?</summary><p>O instalador ainda não tem assinatura digital, então o SmartScreen alerta na primeira execução. Clique em “Mais informações” e depois em “Executar assim mesmo”.</p></details>
     </div>
   </section>
