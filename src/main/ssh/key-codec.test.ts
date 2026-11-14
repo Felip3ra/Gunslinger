@@ -1,10 +1,10 @@
-import { utils } from 'ssh2';
 import { describe, expect, it } from 'vitest';
 import { generateKey, parsePrivateKey } from './key-codec';
+import { testKeyPair } from './testing/test-keys';
 
 describe('parsePrivateKey', () => {
   it('lê uma chave Ed25519 sem frase-senha com tipo, pública e fingerprint', () => {
-    const pair = utils.generateKeyPairSync('ed25519', { comment: 'ana@laptop' });
+    const pair = testKeyPair({ comment: 'ana@laptop' });
     const r = parsePrivateKey(pair.private);
     expect(r.ok).toBe(true);
     if (!r.ok) return;
@@ -14,7 +14,7 @@ describe('parsePrivateKey', () => {
   });
 
   it('pede frase-senha quando a chave é cifrada e recusa a errada', () => {
-    const pair = utils.generateKeyPairSync('ed25519', { comment: 'x', passphrase: 'certa', cipher: 'aes256-ctr', rounds: 4 } as never);
+    const pair = testKeyPair({ comment: 'x', passphrase: 'certa', cipher: 'aes256-ctr', rounds: 4 });
     expect(parsePrivateKey(pair.private)).toEqual({ ok: false, error: 'needs-passphrase' });
     expect(parsePrivateKey(pair.private, 'errada')).toEqual({ ok: false, error: 'bad-passphrase' });
     const ok = parsePrivateKey(pair.private, 'certa');
@@ -26,7 +26,7 @@ describe('parsePrivateKey', () => {
   });
 
   it('recusa uma chave pública no lugar da privada', () => {
-    const pair = utils.generateKeyPairSync('ed25519');
+    const pair = testKeyPair();
     expect(parsePrivateKey(pair.public)).toEqual({ ok: false, error: 'invalid' });
   });
 });

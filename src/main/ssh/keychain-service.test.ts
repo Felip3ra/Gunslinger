@@ -1,12 +1,12 @@
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { utils } from 'ssh2';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { ConfigStore } from '../config/config-store';
 import type { SecretPort } from '../ports';
 import { KeychainService } from './keychain-service';
 import { SecretStore } from './secret-store';
+import { testKeyPair } from './testing/test-keys';
 
 const port = (account = 'ana', available = true): SecretPort => ({
   isAvailable: () => available,
@@ -50,7 +50,7 @@ function expectNoSecrets(...values: string[]): void {
 
 describe('KeychainService: chaves', () => {
   it('importa uma chave colada e mostra só metadados', async () => {
-    const pair = utils.generateKeyPairSync('ed25519', { comment: 'deploy' });
+    const pair = testKeyPair({ comment: 'deploy' });
     const r = await keychain.importKey({ name: 'deploy', source: { kind: 'text', text: pair.private }, savePassphrase: false });
     expect(r.ok).toBe(true);
     const [key] = keychain.snapshot().keys;
@@ -60,7 +60,7 @@ describe('KeychainService: chaves', () => {
   });
 
   it('pede frase-senha e só a guarda com "Salvar frase-senha"', async () => {
-    const pair = utils.generateKeyPairSync('ed25519', { passphrase: 'frase', cipher: 'aes256-ctr', rounds: 4 } as never);
+    const pair = testKeyPair({ passphrase: 'frase', cipher: 'aes256-ctr', rounds: 4 });
     const missing = await keychain.importKey({ name: 'k', source: { kind: 'text', text: pair.private }, savePassphrase: false });
     expect(missing).toEqual({ ok: false, error: 'A chave é protegida por frase-senha.', needsPassphrase: true });
     await keychain.importKey({ name: 'k', source: { kind: 'text', text: pair.private }, passphrase: 'frase', savePassphrase: false });
@@ -82,13 +82,13 @@ describe('KeychainService: chaves', () => {
 
   it('chave por referência é lida do disco a cada uso', async () => {
     const path = join(dir, 'id_ed25519');
-    await writeFile(path, utils.generateKeyPairSync('ed25519').private);
+    await writeFile(path, testKeyPair().private);
     const r = await keychain.importKey({ name: 'ref', source: { kind: 'file', path, mode: 'reference' }, savePassphrase: false });
     expect(r.ok).toBe(true);
     const keyId = keychain.snapshot().keys[0]!.id;
     expect(keychain.snapshot().keys[0]).toMatchObject({ source: 'file', filePath: path, privateKey: 'none' });
     expect(secrets.ids()).toEqual([]);
-    const second = utils.generateKeyPairSync('ed25519').private;
+    const second = testKeyPair().private;
     await writeFile(path, second);
     expect(await keychain.loadKeyMaterial(keyId)).toMatchObject({ ok: true, privateKey: second });
   });

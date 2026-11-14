@@ -13,6 +13,7 @@ import { KeychainService } from './keychain-service';
 import { KnownHostsService } from './known-hosts-service';
 import { SecretStore } from './secret-store';
 import { hostKeyBlob, startTestServer, type TestServer } from './testing/ssh-test-server';
+import { testKeyPair } from './testing/test-keys';
 
 const secretPort: SecretPort = {
   isAvailable: () => true,
@@ -125,7 +126,7 @@ describe('SshConnectionPool: host novo e senha', () => {
   it('chave alterada bloqueia sem enviar credencial', async () => {
     const s = await server({ password: 'x' });
     await addHost({ id: 'vm', port: s.port });
-    const other = hostKeyBlob(utils.generateKeyPairSync('ed25519').private);
+    const other = hostKeyBlob(testKeyPair().private);
     await knownHosts.accept({ host: '127.0.0.1', port: s.port, ...other });
     script = (p) => (p.kind === 'hostKey-changed' ? { kind: 'cancel' } : null);
     await expect(pool().acquire({ kind: 'host', hostId: 'vm' })).rejects.toThrow('A chave do servidor mudou; conexão bloqueada.');
@@ -153,7 +154,7 @@ describe('SshConnectionPool: host novo e senha', () => {
 
 describe('SshConnectionPool: chaves e keyboard-interactive', () => {
   it('usa a chave configurada e pede a frase-senha, salvando quando marcado', async () => {
-    const pair = utils.generateKeyPairSync('ed25519', { passphrase: 'frase', cipher: 'aes256-ctr', rounds: 4 } as never);
+    const pair = testKeyPair({ passphrase: 'frase', cipher: 'aes256-ctr', rounds: 4 });
     const s = await server({ authorizedKey: pair.public });
     const imported = await keychain.importKey({ name: 'deploy', source: { kind: 'text', text: pair.private }, passphrase: 'frase', savePassphrase: false });
     if (!imported.ok) throw new Error(imported.error);

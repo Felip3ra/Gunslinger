@@ -1,9 +1,9 @@
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { utils } from 'ssh2';
 import { expect, test, type Page } from '@playwright/test';
 import { hostKeyBlob, startTestServer, type TestServer } from '../../src/main/ssh/testing/ssh-test-server';
+import { testKeyPair } from '../../src/main/ssh/testing/test-keys';
 import { launchApp } from './helpers';
 
 const PASSWORD = 'segredo';
@@ -81,7 +81,7 @@ test('host novo pede o fingerprint, a senha salva vale na próxima conexão e o 
 });
 
 test('chave do servidor alterada bloqueia a conexão sem enviar credencial', async () => {
-  const other = hostKeyBlob(utils.generateKeyPairSync('ed25519').private);
+  const other = hostKeyBlob(testKeyPair().private);
   const known = [{ host: '127.0.0.1', port: server.port, ...other, addedAt: 1, revoked: false, source: 'app' }];
   const { page, close } = await launchApp({ userData: userData(server.port, { knownHosts: known }) });
   try {
