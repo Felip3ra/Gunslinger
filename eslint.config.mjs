@@ -12,8 +12,8 @@ export default tseslint.config(
     languageOptions: { globals: globals.node },
   },
   {
-    // Hooks do electron-builder, carregados com require().
-    files: ['build/*.cjs'],
+    // Hooks do electron-builder e scripts do npm, carregados com require().
+    files: ['build/*.cjs', 'scripts/*.cjs'],
     languageOptions: { sourceType: 'commonjs', globals: globals.node },
     rules: { '@typescript-eslint/no-require-imports': 'off' },
   },

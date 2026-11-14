@@ -18,7 +18,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "npm run build && playwright test",
-    "postinstall": "electron-rebuild -f -o @vscode/windows-process-tree",
+    "postinstall": "node scripts/fix-node-pty.cjs && electron-rebuild -f -o @vscode/windows-process-tree",
     "dist": "npm run build && electron-builder --win --publish never",
     "dist:linux": "npm run build && electron-builder --linux --publish never",
     "dist:mac": "npm run build && electron-builder --mac --publish never",

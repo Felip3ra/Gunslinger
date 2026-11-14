@@ -70,7 +70,9 @@ test('bash: carrega o perfil do usuário, executa comando e rastreia a pasta atu
 
 test('zsh: carrega o .zshrc do usuário, devolve o ZDOTDIR e rastreia a pasta atual', async () => {
   test.skip(!has('zsh'), 'zsh não instalado');
-  const dir = home({ '.zshrc': 'export GS_RC=zshrc_ok\nPS1="gs%% "\n', '.zshenv': 'export GS_ENV=zshenv_ok\n' });
+  // skip_global_compinit: o /etc/zsh/zshrc do Debian e do Ubuntu roda o compinit, que para numa pergunta
+  // quando a máquina tem pastas de funções graváveis (como nos runners do GitHub).
+  const dir = home({ '.zshrc': 'export GS_RC=zshrc_ok\nPS1="gs%% "\n', '.zshenv': 'export GS_ENV=zshenv_ok\nskip_global_compinit=1\n' });
   const { page, close } = await launchApp({ userData: userData({ defaultProfile: 'builtin.zsh' }), env: { SHELL: '/bin/bash', HOME: dir } });
   try {
     await expect.poll(() => bufferText(page)).toContain('gs%');
