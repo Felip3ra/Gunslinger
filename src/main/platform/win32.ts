@@ -107,7 +107,10 @@ export const win32Adapter: PlatformAdapter = {
   },
 
   async readSystemEnvironment(current) {
-    const [machine, user] = await Promise.all([regExport(MACHINE_ENV_KEY, current), regExport(USER_ENV_KEY, current)]);
+    // Uma chave de cada vez: com as duas exportações em paralelo, o PATH da máquina já veio igual ao do
+    // usuário no runner do GitHub (sem o system32), e nos testes locais a falha também aparecia às vezes.
+    const machine = await regExport(MACHINE_ENV_KEY, current);
+    const user = await regExport(USER_ENV_KEY, current);
     if (machine === null) throw new Error('Não foi possível ler as variáveis de ambiente do sistema.');
     return mergeWindowsEnvironment(current, parseRegExport(machine), user ? parseRegExport(user) : []);
   },
